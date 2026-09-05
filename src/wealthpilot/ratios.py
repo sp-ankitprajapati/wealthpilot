@@ -1,0 +1,72 @@
+"""
+Week 1 — Foundation.
+
+Deterministic underwriting math. No LLM anywhere in this file — that's
+deliberate. These numbers are the ground truth the agent gets graded
+against later, so they can't themselves depend on the thing being graded.
+"""
+
+from .schemas import FinancialStatement
+
+# Z'-score zone cutoffs for PRIVATE firms (Altman, 1983 revision).
+# Not the same cutoffs as the original 1968 public-company Z-score —
+# using those on a private SME is a common, avoidable mistake.
+Z_SAFE_CUTOFF = 2.90
+Z_DISTRESS_CUTOFF = 1.23
+
+
+def compute_ratios(fs: FinancialStatement) -> dict:
+    """Five numbers an underwriter actually looks at, plus the ones that
+    feed the Altman Z'-score."""
+
+    dscr = fs.ebit / fs.total_debt_service if fs.total_debt_service else float("inf")
+    current_ratio = (
+        fs.current_assets / fs.current_liabilities if fs.current_liabilities else float("inf")
+    )
+    debt_to_equity = (
+        fs.total_liabilities / fs.shareholder_equity if fs.shareholder_equity else float("inf")
+    )
+    interest_coverage = (
+        fs.ebit / fs.interest_expense if fs.interest_expense else float("inf")
+    )
+    revenue_growth_pct = (
+        (fs.revenue - fs.prior_period_revenue) / fs.prior_period_revenue * 100
+        if fs.prior_period_revenue
+        else 0.0
+    )
+
+    # Altman Z'-score for PRIVATE firms:
+    #   Z' = 0.717*X1 + 0.847*X2 + 3.107*X3 + 0.420*X4 + 0.998*X5
+    # X1 = working capital / total assets      (liquidity)
+    # X2 = retained earnings / total assets     (accumulated profitability)
+    # X3 = EBIT / total assets                  (operating profitability)
+    # X4 = BOOK equity / total liabilities       (leverage — book, not market:
+    #      a private SME has no market cap, and forcing the original
+    #      public-company formula onto one by substituting book value in is
+    #      a known-bad shortcut, not a harmless approximation)
+    # X5 = revenue / total assets                (asset efficiency)
+    working_capital = fs.current_assets - fs.current_liabilities
+    x1 = working_capital / fs.total_assets
+    x2 = fs.retained_earnings / fs.total_assets
+    x3 = fs.ebit / fs.total_assets
+    x4 = fs.shareholder_equity / fs.total_liabilities if fs.total_liabilities else float("inf")
+    x5 = fs.revenue / fs.total_assets
+
+    altman_z = 0.717 * x1 + 0.847 * x2 + 3.107 * x3 + 0.420 * x4 + 0.998 * x5
+
+    if altman_z > Z_SAFE_CUTOFF:
+        z_zone = "safe"
+    elif altman_z > Z_DISTRESS_CUTOFF:
+        z_zone = "grey"
+    else:
+        z_zone = "distress"
+
+    return {
+        "dscr": round(dscr, 2),
+        "current_ratio": round(current_ratio, 2),
+        "debt_to_equity": round(debt_to_equity, 2),
+        "interest_coverage": round(interest_coverage, 2),
+        "revenue_growth_pct": round(revenue_growth_pct, 1),
+        "altman_z": round(altman_z, 2),
+        "altman_zone": z_zone,
+    }

@@ -1,0 +1,108 @@
+"""
+Week 3 — Policy RAG.
+
+Same dependency-injection shape as Week 2's build_graph(model): the
+functions here take an embeddings object rather than importing one
+directly, so tests can pass a fake and real code can pass
+HuggingFaceEmbeddings / GoogleGenerativeAIEmbeddings without this file
+ever needing to know which.
+"""
+
+import json
+
+from langchain_core.tools import tool
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_chroma import Chroma
+
+from .policy_docs import POLICY_DOCS
+
+def chunk_policy_docs(docs: list[dict], max_clause_chars: int = 800) -> tuple[list[str], list[dict]]:
+    """Returns (texts, metadatas) — kept as parallel lists because that's
+    the exact shape Chroma.from_texts() wants, not because it's the
+    prettiest data structure.
+
+    Splits on the "## " clause boundary EXPLICITLY, as a plain string
+    split — not via RecursiveCharacterTextSplitter at the top level. First
+    version of this function used the recursive splitter directly with
+    chunk_size=700, and it silently MERGED clause 3.1 and 3.2 into one
+    chunk (tagged only "3.1") because their combined length fit under
+    700 — confirmed by printing the actual chunk text, not assumed. The
+    splitter optimizes for filling each chunk close to chunk_size; it has
+    no concept of "these are two distinct citable clauses." Explicit
+    string-splitting on the clause boundary guarantees one clause per
+    chunk, with an unambiguous clause_id, every time. The recursive
+    splitter is still useful — just only as a FALLBACK for a single
+    clause too long to fit in one chunk, where every sub-chunk correctly
+    keeps sharing that one clause's own id.
+    """
+    texts, metadatas = [], []
+    for doc in docs:
+        for raw in doc["text"].split("\n## "):
+            raw = raw.strip()
+            if not raw:
+                continue
+            clause_text = raw if raw.startswith("##") else "## " + raw
+            clause_id = clause_text[3:].split("\n", 1)[0].split(" ", 1)[0]
+
+            if len(clause_text) <= max_clause_chars:
+                texts.append(clause_text)
+                metadatas.append({"source": doc["source"], "clause_id": clause_id})
+            else:
+                sub_splitter = RecursiveCharacterTextSplitter(
+                    chunk_size=max_clause_chars, chunk_overlap=60, separators=["\n\n", "\n", ". "]
+                )
+                for sub in sub_splitter.split_text(clause_text):
+                    texts.append(sub)
+                    metadatas.append({"source": doc["source"], "clause_id": clause_id})
+    return texts, metadatas
+
+
+def build_policy_index(docs: list[dict], embeddings) -> Chroma:
+    texts, metadatas = chunk_policy_docs(docs)
+    return Chroma.from_texts(texts=texts, embedding=embeddings, metadatas=metadatas)
+
+
+def make_retrieve_policy_tool(vectorstore: Chroma):
+    """Factory, not a module-level tool — same reason build_graph() takes
+    a model instead of importing one: the tool needs to close over
+    WHICHEVER vectorstore you built (real index in production, a tiny
+    fake-embedded index in tests), and a bare module-level @tool can't do
+    that."""
+
+    @tool
+    def retrieve_policy(query: str, k: int = 4) -> str:
+        """Retrieve relevant SME underwriting policy clauses for a given
+        risk question (e.g. "is high leverage a decline reason?" or "what
+        happens when DSCR is below 1.0?"). Returns a JSON array of objects
+        with 'text', 'source', and 'clause' — cite the clause number in
+        any policy-based claim, and if nothing relevant comes back, say so
+        rather than inferring policy that wasn't retrieved.
+        """
+        results = vectorstore.similarity_search(query, k=k)
+        payload = [
+            {"text": r.page_content, "source": r.metadata["source"], "clause": r.metadata["clause_id"]}
+            for r in results
+        ]
+        # explicit json.dumps — see Week 2's tools.py for exactly why an
+        # empty result list specifically must not be returned raw
+        return json.dumps(payload)
+
+    return retrieve_policy
+
+
+if __name__ == "__main__":
+    # Live check — needs real embeddings reachable over the network
+    # (HuggingFace Hub for the local model, or your provider's hosted
+    # embeddings). Won't run in a network-sandboxed environment; run this
+    # on your own machine.
+    from langchain_huggingface import HuggingFaceEmbeddings
+
+    embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
+    index = build_policy_index(POLICY_DOCS, embeddings)
+    tool_fn = make_retrieve_policy_tool(index)
+
+    for query in ["is high leverage a decline reason?", "what if DSCR is below 1.0?", "revenue dropped this year, is that a problem?"]:
+        print(f"\nQ: {query}")
+        results = json.loads(tool_fn.invoke({"query": query, "k": 2}))
+        for r in results:
+            print(f"  [{r['source']} / {r['clause']}] {r['text'][:100]}...")

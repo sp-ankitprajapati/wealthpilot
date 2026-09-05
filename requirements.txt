@@ -1,0 +1,21 @@
+# Core — needed regardless of which LLM provider you use
+pydantic>=2.0
+langgraph>=1.0
+langchain-core>=1.0
+langchain-text-splitters
+langchain-chroma
+chromadb
+pytest
+
+# Pick ONE chat provider (see README > Choosing a provider):
+# langchain-anthropic
+# anthropic
+# --- or ---
+# langchain-google-genai
+# google-genai
+# --- or ---
+# langchain-xai
+
+# Embeddings for Week 3's policy RAG — local, free, works with any provider
+langchain-huggingface
+sentence-transformers

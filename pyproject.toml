@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "wealthpilot"
+version = "0.1.0"
+description = "An AI agent for SME loan underwriting and credit research"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "pydantic>=2.0",
+    "langgraph>=1.0",
+    "langchain-core>=1.0",
+    "langchain-text-splitters",
+    "langchain-chroma",
+    "chromadb",
+]
+
+[project.optional-dependencies]
+gemini = ["langchain-google-genai", "google-genai"]
+claude = ["langchain-anthropic", "anthropic"]
+grok = ["langchain-xai"]
+local-embeddings = ["langchain-huggingface", "sentence-transformers"]
+dev = ["pytest"]
+
+[tool.setuptools.packages.find]
+where = ["src"]

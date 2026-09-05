@@ -1,0 +1,22 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# secrets — never commit these
+.env
+*.key
+
+# LangGraph checkpointer / Chroma persistence, once Week 4+ adds them
+*.db
+.chroma/
+chroma_db/
+
+# editor/OS noise
+.vscode/
+.idea/
+.DS_Store
+
+# pytest
+.pytest_cache/

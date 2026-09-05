@@ -1,0 +1,93 @@
+# Build Log
+
+Design decisions and real bugs, week by week — written to actually be
+useful in an interview, not as a changelog. Every bug below was caught by
+running the code and inspecting real output, not discovered by inspection
+or assumed to exist.
+
+## Week 1 — Foundation
+
+**Decision: Altman Z'-score (private-firm variant), not the original
+1968 public-company Z-score.** The original formula needs a market value
+of equity, which a private SME simply doesn't have. Substituting book
+equity into the public formula is a known-bad shortcut. The Z'-score
+(Altman, 1983) uses different coefficients and different zone cutoffs
+(safe >2.90, distress <1.23, vs. the original's 2.99/1.81) specifically
+for firms without traded equity.
+
+**Bug: my own test fixtures failed against my own validator.**
+`FinancialStatement` has a `model_validator` that rejects a statement if
+`ebit` is more than 25% off from `revenue - cogs - operating_expenses`.
+Three early test fixtures overrode `ebit` without adjusting `cogs`/`opex`
+to match, and the validator correctly rejected them. Fixed the fixtures,
+not the validator — proof it catches real inconsistency, including from
+whoever wrote the test.
+
+**Bug: a nondeterministic test.** `test_healthy_cases_land_in_safe_zone`
+failed once, citing "case 8" — but the test never seeded the RNG, so
+which statement "case 8" referred to depended on whatever random calls
+had already happened earlier in the pytest session. Unreproducible
+failures are nearly useless. Fixed by seeding explicitly in every test
+that generates synthetic data.
+
+## Week 2 — Single-agent LangGraph loop
+
+**Decision: separate control-flow tests from judgment-quality tests.**
+Whether the graph calls the right tool, in order, and terminates
+correctly is a different question from whether the LLM's reasoning is
+actually good. The first is testable deterministically, with no API key,
+using `FakeToolCallingModel` — a test double implementing only
+`.bind_tools()` and `.invoke()`. The second needs a real model and lives
+in `agent.py`'s `__main__`, not the test suite.
+
+**Bug: LangGraph's `ToolNode` serializes tool output inconsistently by
+return-value truthiness.** A tool returning a non-empty `list` gets its
+`ToolMessage.content` JSON-serialized automatically. The *same* tool
+returning an **empty** list gets left as a raw Python list — because an
+empty list happens to be technically valid as multimodal "content
+blocks," so the auto-conversion skips it. Confirmed directly (see the
+`[] <class 'list'>` vs. JSON-string output in the commit history / build
+notes). Fix: `detect_red_flags` now does `return json.dumps(flags)`
+explicitly — never trust a framework's implicit serialization for
+structured tool output.
+
+## Week 3 — Policy RAG
+
+**Bug #1: chunk_size too small split a real clause in half.** First
+version used `chunk_size=500`. Clause 3.4 (Distress Zone Handling) is 543
+characters — the splitter fell through to sentence-level separators and
+produced an orphan `n/a`-tagged fragment. Measuring the actual longest
+clause (543 chars) and raising `chunk_size` above it (to 700) was the
+obvious next move —
+
+**Bug #2: which caused a worse bug.** With `chunk_size=700`,
+`RecursiveCharacterTextSplitter` didn't just stop cutting clause 3.4 in
+half — it started *merging* adjacent short clauses (3.1 + 3.2) into a
+single chunk, tagged only with the first clause's ID. A citation pointing
+at "clause 3.1" could now actually be about clause 3.2 (leverage limits).
+The splitter optimizes for filling each chunk close to `chunk_size`; it
+has no concept of "these are two distinct citable units." **The real
+fix** was to stop using the recursive splitter for the top-level split
+entirely — explicit `str.split("\n## ")` on the clause boundary
+guarantees exactly one clause per chunk, with the recursive splitter
+demoted to a fallback used only when a single clause alone exceeds the
+size limit (in which case every sub-chunk correctly keeps that one
+clause's ID — no ambiguity, because it's genuinely one clause).
+
+**Sandbox limitation, not a bug:** real embeddings need
+`huggingface.co` (for the local `sentence-transformers` model) or a
+provider's hosted embeddings API, both unreachable from the environment
+this repo was scaffolded in. `tests/test_rag.py` uses a deterministic
+bag-of-words `FakeEmbeddings` to prove the *pipeline* — chunking,
+indexing, retrieval, metadata, citation format — works correctly. It does
+not, and cannot, prove real semantic retrieval quality. That needs a live
+run of `rag.py`'s `__main__` on a machine with normal internet access.
+
+**Housekeeping:** switched from `langchain_community.vectorstores.Chroma`
+to the standalone `langchain-chroma` package after a deprecation warning
+— `langchain-community`'s vectorstore integrations are being sunset in
+favor of standalone packages.
+
+## Week 4 onward
+
+Not yet built — see the README status table.

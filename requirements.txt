@@ -7,6 +7,7 @@ langchain-text-splitters
 langchain-chroma
 chromadb
 pytest
+mcp>=2,<3   # pinned -- 2.0.0 already broke 1.x's FastMCP import once
 
 # Pick ONE chat provider (see README > Choosing a provider):
 # langchain-anthropic

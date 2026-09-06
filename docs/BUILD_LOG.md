@@ -127,6 +127,49 @@ the second model at all. A test that only calls `.invoke()` twice on the
 in-memory illusion with nothing actually reaching disk — a real restart
 rebuilds the graph object too, so the test has to as well.
 
-## Week 5 onward
+## Week 5 — MCP server
+
+**Discovery: the `mcp` SDK had a breaking major version release after
+this project's tooling knowledge was current.** `mcp` 2.0.0 shipped
+2026-07-28 and renamed `FastMCP` to `MCPServer`, moving
+`mcp.server.fastmcp` → `mcp.server.mcpserver`. The old import doesn't
+just fail silently — it raises a `ModuleNotFoundError` whose message
+names the migration guide, specifically so v1 code gives a useful signal
+that the installed SDK is a different major version rather than a plain
+"module not found." Confirmed by trying the old import first, reading
+that message, then checking the new API's real signatures with
+`inspect.signature()` against the installed 2.1.1 rather than trusting a
+search result. `pyproject.toml` now pins `mcp>=2,<3` — the same lesson
+`langchain-chroma` already taught in Week 3: a range spanning two majors
+can resolve to a version that can't even import.
+
+**Discovery: anticipated vs. unanticipated tool failures are genuinely
+different exception types, but not converted to `is_error=True` at the
+layer this project's tests actually call.** Read directly from the
+installed SDK's source (`mcp/server/mcpserver/tools/base.py`): a
+deliberately-raised `ToolError` gets logged at INFO and re-wrapped as
+`ToolError`; any other exception gets wrapped as `UnexpectedToolError`
+and logged at ERROR with a full traceback, the client seeing only a
+generic message. **Both still propagate as raised Python exceptions**
+out of `MCPServer.call_tool()` when called in-process, the way a test
+does — they are not returned as a `CallToolResult(is_error=True)` at
+this level. That conversion happens only at the real transport/protocol
+layer, which a direct in-process call doesn't exercise. First version of
+`mcp_server.py` let a `pydantic.ValidationError` from a malformed
+financial statement propagate unguarded — confirmed as an
+`UnexpectedToolError`-shaped crash by actually running it and reading
+the traceback, not assumed. Fixed by catching `ValidationError` in
+`calculate_ratios` and re-raising as `ToolError` with a clear message,
+and by testing with `pytest.raises(ToolError)` rather than checking
+`result.is_error`, which would have silently tested nothing.
+
+**Design decision, not a bug:** every MCP tool delegates to the *same*
+underlying LangChain tool objects Week 2's agent and Week 4's
+`risk_analyst` node already call (`_calculate_ratios_tool.invoke(...)`
+inside the MCP wrapper, not a re-implementation). One set of business
+logic, three different callers now — LLM tool-calling, a plain Python
+graph node, and an MCP client.
+
+## Week 6 onward
 
 Not yet built — see the README status table.

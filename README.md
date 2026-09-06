@@ -25,8 +25,8 @@ not just writing it — is in [`docs/BUILD_LOG.md`](docs/BUILD_LOG.md).
 | 2 | Single-agent LangGraph loop (ratio + red-flag tools) | ✅ done |
 | 3 | Policy RAG (structure-aware chunking, Chroma retrieval, citations) | ✅ done |
 | 4 | Multi-agent orchestration + persistent case memory | ✅ done |
-| 5 | MCP server exposing the underwriting tools | ⏳ next |
-| 6 | Human-in-the-loop approval + bias/fairness eval | planned |
+| 5 | MCP server exposing the underwriting tools | ✅ done |
+| 6 | Human-in-the-loop approval + bias/fairness eval | ⏳ next |
 | 7 | Observability, eval harness, final polish | planned |
 
 ## Architecture
@@ -93,6 +93,12 @@ Run the agent live (needs a real API key — see Setup):
 python -m wealthpilot.agent
 ```
 
+Run the MCP server (needs `mcp[cli]` or a real MCP client to actually connect — Claude Desktop is the fastest way to try it: point its MCP settings at `python -m wealthpilot.mcp_server`):
+
+```bash
+python -m wealthpilot.mcp_server
+```
+
 ## A note on how the tests are split
 
 Every week's tests split into two concerns on purpose:
@@ -111,15 +117,17 @@ Every week's tests split into two concerns on purpose:
 Conflating these two is a common mistake — it either makes your tests
 flaky and slow, or means you never test orchestration logic at all.
 
-## Known sandbox limitation (Week 3)
+## Known sandbox limitation (Weeks 3 & 5)
 
 This repo was scaffolded inside a network-sandboxed environment that
 couldn't reach `huggingface.co` to download real embedding model weights.
-`tests/test_rag.py` uses a deterministic bag-of-words fake embedding to
-prove the RAG *pipeline* works — chunking, indexing, retrieval, metadata,
-citation format. It does **not** prove real semantic retrieval quality.
-Run `python -m wealthpilot.rag` on a machine with normal internet access
-to see real `sentence-transformers` embeddings in action.
+`tests/test_rag.py` and `tests/test_mcp_server.py` use a deterministic
+bag-of-words fake embedding to prove the RAG *pipeline* works — chunking,
+indexing, retrieval, metadata, citation format, and (for Week 5) that the
+same retrieval tool works correctly when called through MCP. Neither
+proves real semantic retrieval quality. Run `python -m wealthpilot.rag`
+or `python -m wealthpilot.mcp_server` on a machine with normal internet
+access to see real `sentence-transformers` embeddings in action.
 
 ## Project layout
 
@@ -134,6 +142,7 @@ src/wealthpilot/
   rag.py               # Chunking, Chroma indexing, retrieve_policy tool (Week 3)
   multi_agent.py       # CaseState, 4 specialist nodes, supervisor router (Week 4)
   case_graph.py        # build_case_graph + run_case (checkpointed multi-agent graph)
+  mcp_server.py         # MCP server exposing the same tools via mcp 2.x's MCPServer (Week 5)
   paths.py             # Single source of truth for data file locations
 tests/                # pytest — see "how the tests are split" above
 data/eval_cases.json  # 20 labeled synthetic cases (5 per risk profile)

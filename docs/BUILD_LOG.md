@@ -88,6 +88,45 @@ to the standalone `langchain-chroma` package after a deprecation warning
 — `langchain-community`'s vectorstore integrations are being sunset in
 favor of standalone packages.
 
-## Week 4 onward
+## Week 4 — Multi-agent orchestration + persistent case memory
+
+**Design decision, applied proactively from a Week 2 lesson, not
+discovered by a failure this time:** the supervisor routes on key
+*presence* (`"policy_findings" not in state`), never on truthiness
+(`not state.get("policy_findings")`). An empty `policy_findings` list is
+a legitimate completed result — no red flags means nothing to look up —
+and would be indistinguishable from "hasn't run yet" under a truthiness
+check, since `[]` is falsy. This is the same class of issue Week 2's
+empty-list serialization bug belonged to (empty vs. absent), and this
+time it was designed around correctly from the start rather than found
+by a failing test.
+
+**Bug, actually caught by a failing test this time:** `.invoke()` on an
+already-completed case (same `thread_id`, nothing new to do) returns
+`None` — even though `app.get_state(config).values` shows the case's
+full state intact and correct. Confirmed directly: printing `.invoke()`'s
+raw return value showed `None` while `get_state()` right after showed
+every field present. Root cause: when the supervisor's conditional entry
+point routes straight to `END`, zero graph nodes execute, and
+`.invoke()`, which returns whatever the last executed step emitted, has
+nothing to return. **Real consequence:** any caller who does
+`result["verdict"]` on that return value crashes on a case that's
+actually fine — exactly what this project's own test suite did on the
+first run. Fixed with a small wrapper, `run_case()`, that falls back to
+`get_state(config).values` whenever `.invoke()` returns `None`. Every
+real caller of this graph should go through `run_case()`, not raw
+`.invoke()`.
+
+**Test design point:** the persistence tests don't just check that
+`compile(checkpointer=...)` doesn't crash — they build a completely
+*second* `build_case_graph()` object, with a fresh `SqliteSaver`
+connection to the same file, and a *different* fake model, then confirm
+the resumed case still returns the first model's verdict and never calls
+the second model at all. A test that only calls `.invoke()` twice on the
+*same* Python object would still pass even if persistence were an
+in-memory illusion with nothing actually reaching disk — a real restart
+rebuilds the graph object too, so the test has to as well.
+
+## Week 5 onward
 
 Not yet built — see the README status table.

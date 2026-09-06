@@ -24,8 +24,8 @@ not just writing it — is in [`docs/BUILD_LOG.md`](docs/BUILD_LOG.md).
 | 1 | Financial statement schema, ratio engine, labeled synthetic eval set | ✅ done |
 | 2 | Single-agent LangGraph loop (ratio + red-flag tools) | ✅ done |
 | 3 | Policy RAG (structure-aware chunking, Chroma retrieval, citations) | ✅ done |
-| 4 | Multi-agent orchestration + persistent case memory | ⏳ next |
-| 5 | MCP server exposing the underwriting tools | planned |
+| 4 | Multi-agent orchestration + persistent case memory | ✅ done |
+| 5 | MCP server exposing the underwriting tools | ⏳ next |
 | 6 | Human-in-the-loop approval + bias/fairness eval | planned |
 | 7 | Observability, eval harness, final polish | planned |
 
@@ -129,9 +129,11 @@ src/wealthpilot/
   ratios.py          # DSCR, current ratio, D/E, interest coverage, Altman Z'-score
   synthetic_data.py   # Labeled synthetic SME cases, 4 risk profiles
   tools.py            # calculate_ratios, detect_red_flags (LangChain @tool)
-  agent.py             # LangGraph single-agent loop + provider-agnostic model factory
+  agent.py             # Single-agent loop + provider-agnostic model factory (Week 2)
   policy_docs.py       # Illustrative SME lending policy text (Week 3)
-  rag.py               # Chunking, Chroma indexing, retrieve_policy tool
+  rag.py               # Chunking, Chroma indexing, retrieve_policy tool (Week 3)
+  multi_agent.py       # CaseState, 4 specialist nodes, supervisor router (Week 4)
+  case_graph.py        # build_case_graph + run_case (checkpointed multi-agent graph)
   paths.py             # Single source of truth for data file locations
 tests/                # pytest — see "how the tests are split" above
 data/eval_cases.json  # 20 labeled synthetic cases (5 per risk profile)

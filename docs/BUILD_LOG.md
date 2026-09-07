@@ -170,6 +170,59 @@ inside the MCP wrapper, not a re-implementation). One set of business
 logic, three different callers now — LLM tool-calling, a plain Python
 graph node, and an MCP client.
 
-## Week 6 onward
+## Week 6 — Human-in-the-loop approval + bias/fairness eval
+
+No new dependency needed this week — a real contrast to Weeks 3 and 5,
+both of which needed a package swap. `interrupt()`, `Command`, and
+`InMemorySaver` are all already part of `langgraph`, already a
+dependency since Week 4.
+
+**Design change: split one "verdict" field into two.**
+`recommended_verdict` (the AI's suggestion) and `final_status` (the
+actual outcome: `"approved"`/an overridden verdict, `"sent_back"`, or
+`"rejected_invalid_data"`) used to be conflated under one `"verdict"`
+key. The supervisor's "is this case done" check now looks at
+`final_status` only — an AI recommendation alone must never be treated
+as final, which is the entire point of human-in-the-loop. This also
+meant updating every Week 4 test that checked `result["verdict"]`; they
+now invoke, confirm the case paused with a recommendation, resume with
+`Command(resume=...)`, and check `final_status` — a real behavior
+change, not a cosmetic rename, so the old tests couldn't just be patched
+in place, they had to be re-thought around the new two-phase flow.
+
+**Finding, confirmed by direct test:** `interrupt()` re-executes the
+*entire* node from the top on resume, replaying anything before the
+`interrupt()` call. `human_approval` calls `interrupt()` as the very
+first line for exactly this reason — any side-effecting logic placed
+before it would silently re-run on every resume, not just once.
+
+**Finding, confirmed by direct test:** a node's return value that isn't
+declared in the compiled `CaseState` schema is *silently dropped* — not
+an error, just absent from `get_state()` and the next node's input. Ran
+a minimal reproduction with `MessagesState` (which only declares
+`messages`) returning an undeclared `approved` key from a node — it
+never appeared anywhere afterward. `CaseState` already declares every
+field nodes use, so this wasn't a bug in this project's own code, but
+it's a real, easy-to-hit footgun for anyone who adds a new field to a
+node's return value and forgets to add it to the state schema too.
+
+**Fairness: a structural claim, not a statistical one.** Added
+`applicant_region` to `FinancialStatement` as an explicitly-unused field
+— collected for compliance monitoring, never read by `compute_ratios`,
+`detect_red_flags`, or any prompt `multi_agent.py` builds. Rather than
+computing an approval-rate disparity on invented protected-attribute
+data (this system has none), `fairness.py` and `tests/test_fairness.py`
+prove something stronger and directly falsifiable: the *exact* prompt
+text sent to `final_review`'s model is captured and shown to be
+byte-identical across two otherwise-identical cases differing only in
+region, and the standard fair-lending disparate impact ratio, computed
+end-to-end across 3 profiles × 3 regions through the real graph
+(including human approval), comes back at *exactly* 1.0 — not
+approximately close to it. That's the difference between "we measured
+fairness and it looked fine" and "the architecture makes the unfair
+outcome structurally impossible" — a stronger, more specific claim to
+be able to defend in an interview.
+
+## Week 7 onward
 
 Not yet built — see the README status table.

@@ -26,8 +26,8 @@ not just writing it — is in [`docs/BUILD_LOG.md`](docs/BUILD_LOG.md).
 | 3 | Policy RAG (structure-aware chunking, Chroma retrieval, citations) | ✅ done |
 | 4 | Multi-agent orchestration + persistent case memory | ✅ done |
 | 5 | MCP server exposing the underwriting tools | ✅ done |
-| 6 | Human-in-the-loop approval + bias/fairness eval | ⏳ next |
-| 7 | Observability, eval harness, final polish | planned |
+| 6 | Human-in-the-loop approval + bias/fairness eval | ✅ done |
+| 7 | Observability, eval harness, final polish | ⏳ next |
 
 ## Architecture
 
@@ -48,7 +48,16 @@ Financial statement (JSON)
               └───────────────────┘        └────────────────────┘
                         │
                         ▼
-              Cited risk summary + verdict
+              Cited risk summary + RECOMMENDED verdict
+                        │
+                        ▼
+              ┌────────────────────┐
+              │   human_approval    │   interrupt() -- pauses here for
+              │  (Week 6, HITL)     │   a real reviewer's approve /
+              └────────────────────┘   send-back / override decision
+                        │
+                        ▼
+              final_status (the actual decision)
 ```
 
 Every tool returns a **deterministic, tested** result — the LLM decides
@@ -143,8 +152,15 @@ src/wealthpilot/
   multi_agent.py       # CaseState, 4 specialist nodes, supervisor router (Week 4)
   case_graph.py        # build_case_graph + run_case (checkpointed multi-agent graph)
   mcp_server.py         # MCP server exposing the same tools via mcp 2.x's MCPServer (Week 5)
+  fairness.py           # Region-variant case generation + disparate impact ratio (Week 6)
   paths.py             # Single source of truth for data file locations
-tests/                # pytest — see "how the tests are split" above
+tests/                # pytest, organized by SOURCE MODULE, not by week --
+                        # test_case_graph.py covers case_graph.py AND
+                        # multi_agent.py (orchestration, persistence, and
+                        # human-in-the-loop approval together, since all
+                        # three exercise the same graph); test_fairness.py
+                        # covers fairness.py specifically. See "how the
+                        # tests are split" above for the broader philosophy.
 data/eval_cases.json  # 20 labeled synthetic cases (5 per risk profile)
 docs/BUILD_LOG.md      # Design rationale + real bugs found each week
 ```

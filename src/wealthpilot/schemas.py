@@ -8,6 +8,8 @@ means every later week is building on solid ground instead of a dict of
 whatever-keys-happened-to-parse.
 """
 
+from typing import Optional
+
 from pydantic import BaseModel, field_validator, model_validator
 
 
@@ -34,6 +36,15 @@ class FinancialStatement(BaseModel):
 
     # debt service
     total_debt_service: float  # annual principal + interest due
+
+    # Week 6 — fairness monitoring ONLY. Collected so a compliance review
+    # can check for disparate impact across regions after the fact (see
+    # fairness.py) — never read by compute_ratios, detect_red_flags, or
+    # any prompt built in multi_agent.py. That's not "trusted to be
+    # ignored" by convention; it's structurally absent from every
+    # downstream input those functions actually receive. See
+    # docs/BUILD_LOG.md, Week 6, for why that distinction is the point.
+    applicant_region: Optional[str] = None
 
     @field_validator("revenue", "total_assets")
     @classmethod

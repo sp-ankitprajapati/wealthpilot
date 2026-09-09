@@ -20,15 +20,19 @@ from .multi_agent import (
     human_approval,
     supervisor,
 )
+from .tracing import traced_node
 
 
 def build_case_graph(model, retrieve_policy_tool, checkpointer=None):
     graph = StateGraph(CaseState)
-    graph.add_node("document_parser", document_parser)
-    graph.add_node("risk_analyst", risk_analyst)
-    graph.add_node("credit_researcher", make_credit_researcher(model, retrieve_policy_tool))
-    graph.add_node("final_review", make_final_review(model))
-    graph.add_node("human_approval", human_approval)
+    graph.add_node("document_parser", traced_node(document_parser, "document_parser"))
+    graph.add_node("risk_analyst", traced_node(risk_analyst, "risk_analyst"))
+    graph.add_node(
+        "credit_researcher",
+        traced_node(make_credit_researcher(model, retrieve_policy_tool), "credit_researcher"),
+    )
+    graph.add_node("final_review", traced_node(make_final_review(model), "final_review"))
+    graph.add_node("human_approval", traced_node(human_approval, "human_approval"))
 
     graph.set_conditional_entry_point(supervisor)
     for node in ("document_parser", "risk_analyst", "credit_researcher", "final_review", "human_approval"):

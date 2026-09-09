@@ -3,11 +3,14 @@ pydantic>=2.0
 langgraph>=1.0
 langgraph-checkpoint-sqlite
 langchain-core>=1.0
-langchain-text-splitters
 langchain-chroma
 chromadb
 pytest
 mcp>=2,<3   # pinned -- 2.0.0 already broke 1.x's FastMCP import once
+# NOTE: langchain-text-splitters intentionally NOT here -- it pulled in
+# sentence_transformers -> torch as a transitive import (~7s per process
+# start) for one rarely-used fallback function. Replaced with a ~20-line
+# hand-rolled splitter in rag.py. See docs/BUILD_LOG.md, Week 7.
 
 # Pick ONE chat provider (see README > Choosing a provider):
 # langchain-anthropic

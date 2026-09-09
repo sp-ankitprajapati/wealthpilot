@@ -13,7 +13,6 @@ dependencies = [
     "langgraph>=1.0",
     "langgraph-checkpoint-sqlite",
     "langchain-core>=1.0",
-    "langchain-text-splitters",
     "langchain-chroma",
     "chromadb",
     "mcp>=2,<3",

@@ -27,7 +27,9 @@ not just writing it — is in [`docs/BUILD_LOG.md`](docs/BUILD_LOG.md).
 | 4 | Multi-agent orchestration + persistent case memory | ✅ done |
 | 5 | MCP server exposing the underwriting tools | ✅ done |
 | 6 | Human-in-the-loop approval + bias/fairness eval | ✅ done |
-| 7 | Observability, eval harness, final polish | ⏳ next |
+| 7 | Observability, eval harness, final polish | ✅ done |
+
+All 7 weeks of the original build plan are complete. 65 tests pass across the full test suite (`pytest tests/ -v`). See [`docs/BUILD_LOG.md`](docs/BUILD_LOG.md) for the complete week-by-week story, including every real bug found along the way — that log is the actual interview-prep material this project produced, arguably more than the code itself.
 
 ## Architecture
 
@@ -108,6 +110,18 @@ Run the MCP server (needs `mcp[cli]` or a real MCP client to actually connect �
 python -m wealthpilot.mcp_server
 ```
 
+Run the eval harness against all 20 labeled cases (needs a real API key):
+
+```bash
+python -m wealthpilot.eval_harness
+```
+
+Run the demo (a single case, formatted for actually presenting the system — needs a real API key):
+
+```bash
+python -m wealthpilot.demo
+```
+
 ## A note on how the tests are split
 
 Every week's tests split into two concerns on purpose:
@@ -126,17 +140,19 @@ Every week's tests split into two concerns on purpose:
 Conflating these two is a common mistake — it either makes your tests
 flaky and slow, or means you never test orchestration logic at all.
 
-## Known sandbox limitation (Weeks 3 & 5)
+## Known sandbox limitation (Weeks 3, 5 & 7)
 
 This repo was scaffolded inside a network-sandboxed environment that
-couldn't reach `huggingface.co` to download real embedding model weights.
-`tests/test_rag.py` and `tests/test_mcp_server.py` use a deterministic
-bag-of-words fake embedding to prove the RAG *pipeline* works — chunking,
-indexing, retrieval, metadata, citation format, and (for Week 5) that the
-same retrieval tool works correctly when called through MCP. Neither
-proves real semantic retrieval quality. Run `python -m wealthpilot.rag`
-or `python -m wealthpilot.mcp_server` on a machine with normal internet
-access to see real `sentence-transformers` embeddings in action.
+couldn't reach `huggingface.co` to download real embedding model weights,
+or any LLM provider's API. `tests/test_rag.py`, `tests/test_mcp_server.py`,
+and `tests/test_eval_harness.py` all use a deterministic bag-of-words fake
+embedding (and, for the eval harness, a rule-based fake model) to prove
+the *pipeline* works — chunking, indexing, retrieval, citation format,
+orchestration, and accuracy/confusion-matrix arithmetic. None of this
+proves real semantic retrieval quality or real LLM judgment quality. Run
+`python -m wealthpilot.eval_harness` or `python -m wealthpilot.demo` on a
+machine with normal internet access and a real API key to see both for
+real.
 
 ## Project layout
 
@@ -153,13 +169,18 @@ src/wealthpilot/
   case_graph.py        # build_case_graph + run_case (checkpointed multi-agent graph)
   mcp_server.py         # MCP server exposing the same tools via mcp 2.x's MCPServer (Week 5)
   fairness.py           # Region-variant case generation + disparate impact ratio (Week 6)
+  tracing.py            # traced_node -- structured logging wrapper for any graph node (Week 7)
+  eval_harness.py        # Runs the full graph against data/eval_cases.json, reports accuracy (Week 7)
+  demo.py                # Single-case walkthrough with formatted output -- the interview demo script
   paths.py             # Single source of truth for data file locations
 tests/                # pytest, organized by SOURCE MODULE, not by week --
                         # test_case_graph.py covers case_graph.py AND
                         # multi_agent.py (orchestration, persistence, and
                         # human-in-the-loop approval together, since all
                         # three exercise the same graph); test_fairness.py
-                        # covers fairness.py specifically. See "how the
+                        # covers fairness.py; test_tracing.py and
+                        # test_eval_harness.py cover Week 7's observability
+                        # and eval harness respectively. See "how the
                         # tests are split" above for the broader philosophy.
 data/eval_cases.json  # 20 labeled synthetic cases (5 per risk profile)
 docs/BUILD_LOG.md      # Design rationale + real bugs found each week

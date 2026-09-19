@@ -223,6 +223,63 @@ fairness and it looked fine" and "the architecture makes the unfair
 outcome structurally impossible" — a stronger, more specific claim to
 be able to defend in an interview.
 
-## Week 7 onward
+## Week 7 — Observability, eval harness, final polish
 
-Not yet built — see the README status table.
+**Confirmed before relying on it, not assumed:** wrapping an
+`interrupt()`-based node (`human_approval`) in the tracing decorator is
+safe. Built a minimal repro first — a node calling `interrupt()`, wrapped
+in a trace logger — and confirmed the log line only fires on the
+*resume* call that actually completes the node, never on the initial
+pause. `traced_node` wraps every node in `case_graph.py` on the strength
+of that confirmation, and `tests/test_tracing.py` now runs the same
+check against the real graph, not just the throwaway repro.
+
+**Performance finding: a rarely-used fallback function was costing every
+process ~7 seconds to import, warm cache or not.** `rag.py` imported
+`RecursiveCharacterTextSplitter` from `langchain-text-splitters`, used
+only as a fallback for a single oversized policy clause. That package
+transitively imports `sentence_transformers` → `transformers` → `torch`
+— confirmed with `python -X importtime`, and confirmed the cost wasn't a
+cold-cache artifact by re-measuring warm. Even importing the specific
+submodule (`langchain_text_splitters.character`) didn't avoid it — the
+dependency is baked into the package's own internals. Replaced with a
+~20-line hand-rolled recursive splitter with zero heavy dependencies.
+Import time: **7.6s → 1.06s**. Dependency removed from `pyproject.toml`
+and `requirements.txt` entirely, not just deferred.
+
+**The real bug of this week: a "deterministic" fake model was
+non-deterministic *across separate process runs*, and it took real
+diagnostic work, not a guess, to find why.** `RuleBasedFakeModel`'s
+eval-harness accuracy score varied between runs of the *identical*
+command — 95% in isolation, 75% as part of a larger test file, flaky
+even at exactly that combination (3 of 4 repeat runs passed, 1 failed).
+Bisection ruled out test order and fixture reuse as the direct cause —
+running all four `TestTracing` tests before the failing test reproduced
+it, but every subset and every individual test, run the same way, did
+not. The actual root cause: the fake's `retrieve_policy` tool call used
+a generic one-word query (`"policy"`) instead of the real red-flag text,
+which has near-zero word overlap with every policy clause — so every
+clause tied at ~zero similarity, and Chroma's tie-breaking among
+equally-scored results turned out not to be stable across process runs.
+Fixed by having the fake construct its query from the actual red-flag
+text in the prompt (`content.split("concerns:")[-1]`), the same way a
+competent real model would. Confirmed the fix with 6 repeated runs of
+the exact previously-flaky command, all green, plus 3 full-file repeats.
+Same root cause in spirit as Week 1's unseeded-RNG test bug: a fixture
+with a hidden source of randomness masquerading as deterministic — that
+one was random.seed(), this one was similarity-score ties.
+
+**Design choice: the eval harness proves it measures something, not
+just that it runs.** `RuleBasedFakeModel` (reads real red-flag text,
+should score well) and `AlwaysApproveFakeModel` (ignores input entirely,
+should score badly) are both run against the same 20-case labeled set,
+and a test asserts the two accuracy numbers differ by a wide margin. A
+harness that always reports the same number regardless of input quality
+would pass every other test in this file and still be useless — this is
+the one that would have caught that.
+
+## Project status
+
+All 7 weeks of the original build plan are complete. See the README's
+status table and "Project layout" section for the current state of each
+module.

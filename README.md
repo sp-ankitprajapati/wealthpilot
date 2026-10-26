@@ -42,7 +42,7 @@ final_status values are approve/review/decline when the human accepts or overrid
 
 ## Numeric contracts
 
-Ratios use the project's simplified EBIT-based DSCR and private-firm Altman Z-prime formula. Undefined ratios are JSON null with an explicit undefined_ratios list, rather than nonstandard Infinity. A zero prior revenue does not become fabricated0% growth. Nonpositive book equity receives an explicit manual-review flag rather than appearing reassuring through a negative debt-to-equity ratio. The public flagging tool validates its ratio schema.
+Ratios use the project's simplified EBIT-based DSCR and private-firm Altman Z-prime formula. Undefined ratios are JSON null with an explicit undefined_ratios list, rather than nonstandard Infinity. A zero prior revenue does not become fabricated 0% growth. Nonpositive book equity receives an explicit manual-review flag rather than appearing reassuring through a negative debt-to-equity ratio. The public flagging tool validates its ratio schema.
 
 These are educational formulas and synthetic policy thresholds, not a validated credit-risk model or lending advice. Altman-model applicability varies by business type and requires domain assessment. The application does not implement real document OCR, default prediction, portfolio validation or regulated underwriting controls.
 

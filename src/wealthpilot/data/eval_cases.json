@@ -1,0 +1,622 @@
+[
+  {
+    "statement": {
+      "company_id": "SME-HEAL-001",
+      "period": "FY2025-Q4",
+      "revenue": 3942996.59,
+      "prior_period_revenue": 3596280.75,
+      "cogs": 2204356.17,
+      "operating_expenses": 645160.26,
+      "ebit": 1093480.16,
+      "interest_expense": 238636.5,
+      "net_income": 641132.74,
+      "total_assets": 3102070.3,
+      "current_assets": 952853.2,
+      "current_liabilities": 578749.82,
+      "total_liabilities": 1321839.8,
+      "shareholder_equity": 1780230.5,
+      "retained_earnings": 732117.47,
+      "total_debt_service": 576456.94
+    },
+    "ratios": {
+      "dscr": 1.9,
+      "current_ratio": 1.65,
+      "debt_to_equity": 0.74,
+      "interest_coverage": 4.58,
+      "revenue_growth_pct": 9.6,
+      "altman_z": 3.22,
+      "altman_zone": "safe"
+    },
+    "risk_profile": "healthy",
+    "expected_verdict": "approve"
+  },
+  {
+    "statement": {
+      "company_id": "SME-HEAL-002",
+      "period": "FY2025-Q4",
+      "revenue": 2544278.08,
+      "prior_period_revenue": 2376257.86,
+      "cogs": 1449249.11,
+      "operating_expenses": 422833.82,
+      "ebit": 672195.15,
+      "interest_expense": 127843.47,
+      "net_income": 408263.76,
+      "total_assets": 2277767.55,
+      "current_assets": 1142720.25,
+      "current_liabilities": 484579.84,
+      "total_liabilities": 994394.6,
+      "shareholder_equity": 1283372.95,
+      "retained_earnings": 666075.88,
+      "total_debt_service": 312333.99
+    },
+    "ratios": {
+      "dscr": 2.15,
+      "current_ratio": 2.36,
+      "debt_to_equity": 0.77,
+      "interest_coverage": 5.26,
+      "revenue_growth_pct": 7.1,
+      "altman_z": 3.03,
+      "altman_zone": "safe"
+    },
+    "risk_profile": "healthy",
+    "expected_verdict": "approve"
+  },
+  {
+    "statement": {
+      "company_id": "SME-HEAL-003",
+      "period": "FY2025-Q4",
+      "revenue": 7150810.75,
+      "prior_period_revenue": 6601404.97,
+      "cogs": 3780314.04,
+      "operating_expenses": 1186245.22,
+      "ebit": 2184251.49,
+      "interest_expense": 536119.83,
+      "net_income": 1236098.75,
+      "total_assets": 5538156.4,
+      "current_assets": 2237786.4,
+      "current_liabilities": 1282707.0,
+      "total_liabilities": 2421503.64,
+      "shareholder_equity": 3116652.76,
+      "retained_earnings": 1844042.53,
+      "total_debt_service": 1052146.0
+    },
+    "ratios": {
+      "dscr": 2.08,
+      "current_ratio": 1.74,
+      "debt_to_equity": 0.78,
+      "interest_coverage": 4.07,
+      "revenue_growth_pct": 8.3,
+      "altman_z": 3.46,
+      "altman_zone": "safe"
+    },
+    "risk_profile": "healthy",
+    "expected_verdict": "approve"
+  },
+  {
+    "statement": {
+      "company_id": "SME-HEAL-004",
+      "period": "FY2025-Q4",
+      "revenue": 2376733.85,
+      "prior_period_revenue": 2150392.95,
+      "cogs": 1265272.14,
+      "operating_expenses": 461133.9,
+      "ebit": 650327.81,
+      "interest_expense": 177460.35,
+      "net_income": 354650.59,
+      "total_assets": 2041319.42,
+      "current_assets": 765999.35,
+      "current_liabilities": 370325.38,
+      "total_liabilities": 853225.91,
+      "shareholder_equity": 1188093.51,
+      "retained_earnings": 582082.77,
+      "total_debt_service": 328752.71
+    },
+    "ratios": {
+      "dscr": 1.98,
+      "current_ratio": 2.07,
+      "debt_to_equity": 0.72,
+      "interest_coverage": 3.66,
+      "revenue_growth_pct": 10.5,
+      "altman_z": 3.12,
+      "altman_zone": "safe"
+    },
+    "risk_profile": "healthy",
+    "expected_verdict": "approve"
+  },
+  {
+    "statement": {
+      "company_id": "SME-HEAL-005",
+      "period": "FY2025-Q4",
+      "revenue": 3464579.06,
+      "prior_period_revenue": 3277332.07,
+      "cogs": 1910756.2,
+      "operating_expenses": 705931.8,
+      "ebit": 847891.06,
+      "interest_expense": 206509.72,
+      "net_income": 481036.01,
+      "total_assets": 2949840.27,
+      "current_assets": 1257426.56,
+      "current_liabilities": 527413.08,
+      "total_liabilities": 1084685.37,
+      "shareholder_equity": 1865154.9,
+      "retained_earnings": 980021.11,
+      "total_debt_service": 479812.27
+    },
+    "ratios": {
+      "dscr": 1.77,
+      "current_ratio": 2.38,
+      "debt_to_equity": 0.58,
+      "interest_coverage": 4.11,
+      "revenue_growth_pct": 5.7,
+      "altman_z": 3.25,
+      "altman_zone": "safe"
+    },
+    "risk_profile": "healthy",
+    "expected_verdict": "approve"
+  },
+  {
+    "statement": {
+      "company_id": "SME-ILLI-001",
+      "period": "FY2025-Q4",
+      "revenue": 4933778.6,
+      "prior_period_revenue": 4455875.94,
+      "cogs": 2944356.27,
+      "operating_expenses": 1114413.55,
+      "ebit": 875008.78,
+      "interest_expense": 285674.06,
+      "net_income": 442001.04,
+      "total_assets": 4765926.72,
+      "current_assets": 1157977.32,
+      "current_liabilities": 1668256.53,
+      "total_liabilities": 2165133.37,
+      "shareholder_equity": 2600793.35,
+      "retained_earnings": 1504067.31,
+      "total_debt_service": 581535.38
+    },
+    "ratios": {
+      "dscr": 1.5,
+      "current_ratio": 0.69,
+      "debt_to_equity": 0.83,
+      "interest_coverage": 3.06,
+      "revenue_growth_pct": 10.7,
+      "altman_z": 2.3,
+      "altman_zone": "grey"
+    },
+    "risk_profile": "illiquid",
+    "expected_verdict": "review"
+  },
+  {
+    "statement": {
+      "company_id": "SME-ILLI-002",
+      "period": "FY2025-Q4",
+      "revenue": 7039806.68,
+      "prior_period_revenue": 6867855.8,
+      "cogs": 4105522.92,
+      "operating_expenses": 1547695.39,
+      "ebit": 1386588.37,
+      "interest_expense": 371920.22,
+      "net_income": 761001.11,
+      "total_assets": 6384535.19,
+      "current_assets": 1704194.47,
+      "current_liabilities": 2145965.89,
+      "total_liabilities": 3185655.71,
+      "shareholder_equity": 3198879.48,
+      "retained_earnings": 2068323.29,
+      "total_debt_service": 779448.31
+    },
+    "ratios": {
+      "dscr": 1.78,
+      "current_ratio": 0.79,
+      "debt_to_equity": 1.0,
+      "interest_coverage": 3.73,
+      "revenue_growth_pct": 2.5,
+      "altman_z": 2.42,
+      "altman_zone": "grey"
+    },
+    "risk_profile": "illiquid",
+    "expected_verdict": "review"
+  },
+  {
+    "statement": {
+      "company_id": "SME-ILLI-003",
+      "period": "FY2025-Q4",
+      "revenue": 6011916.3,
+      "prior_period_revenue": 5421576.38,
+      "cogs": 3500851.1,
+      "operating_expenses": 1142762.5,
+      "ebit": 1368302.69,
+      "interest_expense": 450589.84,
+      "net_income": 688284.64,
+      "total_assets": 5580200.23,
+      "current_assets": 1319429.2,
+      "current_liabilities": 1588774.26,
+      "total_liabilities": 2061331.73,
+      "shareholder_equity": 3518868.5,
+      "retained_earnings": 1668944.61,
+      "total_debt_service": 784610.98
+    },
+    "ratios": {
+      "dscr": 1.74,
+      "current_ratio": 0.83,
+      "debt_to_equity": 0.59,
+      "interest_coverage": 3.04,
+      "revenue_growth_pct": 10.9,
+      "altman_z": 2.77,
+      "altman_zone": "grey"
+    },
+    "risk_profile": "illiquid",
+    "expected_verdict": "review"
+  },
+  {
+    "statement": {
+      "company_id": "SME-ILLI-004",
+      "period": "FY2025-Q4",
+      "revenue": 2483487.81,
+      "prior_period_revenue": 2324383.14,
+      "cogs": 1461435.21,
+      "operating_expenses": 578660.18,
+      "ebit": 443392.42,
+      "interest_expense": 187235.22,
+      "net_income": 192117.9,
+      "total_assets": 2550141.06,
+      "current_assets": 608544.9,
+      "current_liabilities": 890302.08,
+      "total_liabilities": 1051409.07,
+      "shareholder_equity": 1498731.98,
+      "retained_earnings": 760803.34,
+      "total_debt_service": 316518.32
+    },
+    "ratios": {
+      "dscr": 1.4,
+      "current_ratio": 0.68,
+      "debt_to_equity": 0.7,
+      "interest_coverage": 2.37,
+      "revenue_growth_pct": 6.8,
+      "altman_z": 2.28,
+      "altman_zone": "grey"
+    },
+    "risk_profile": "illiquid",
+    "expected_verdict": "review"
+  },
+  {
+    "statement": {
+      "company_id": "SME-ILLI-005",
+      "period": "FY2025-Q4",
+      "revenue": 2905525.43,
+      "prior_period_revenue": 2655933.3,
+      "cogs": 1645215.95,
+      "operating_expenses": 563672.41,
+      "ebit": 696637.07,
+      "interest_expense": 231339.75,
+      "net_income": 348972.99,
+      "total_assets": 2684271.75,
+      "current_assets": 596079.07,
+      "current_liabilities": 878105.5,
+      "total_liabilities": 941143.36,
+      "shareholder_equity": 1743128.39,
+      "retained_earnings": 916334.62,
+      "total_debt_service": 450718.99
+    },
+    "ratios": {
+      "dscr": 1.55,
+      "current_ratio": 0.68,
+      "debt_to_equity": 0.54,
+      "interest_coverage": 3.01,
+      "revenue_growth_pct": 9.4,
+      "altman_z": 2.88,
+      "altman_zone": "grey"
+    },
+    "risk_profile": "illiquid",
+    "expected_verdict": "review"
+  },
+  {
+    "statement": {
+      "company_id": "SME-OVER-001",
+      "period": "FY2025-Q4",
+      "revenue": 7718587.55,
+      "prior_period_revenue": 7806808.07,
+      "cogs": 4949461.79,
+      "operating_expenses": 1318949.44,
+      "ebit": 1450176.32,
+      "interest_expense": 963166.87,
+      "net_income": 365257.09,
+      "total_assets": 8872271.56,
+      "current_assets": 1732563.21,
+      "current_liabilities": 1364373.51,
+      "total_liabilities": 7287648.67,
+      "shareholder_equity": 1584622.89,
+      "retained_earnings": 435617.01,
+      "total_debt_service": 2012989.81
+    },
+    "ratios": {
+      "dscr": 0.72,
+      "current_ratio": 1.27,
+      "debt_to_equity": 4.6,
+      "interest_coverage": 1.51,
+      "revenue_growth_pct": -1.1,
+      "altman_z": 1.54,
+      "altman_zone": "grey"
+    },
+    "risk_profile": "overleveraged",
+    "expected_verdict": "decline"
+  },
+  {
+    "statement": {
+      "company_id": "SME-OVER-002",
+      "period": "FY2025-Q4",
+      "revenue": 4393872.99,
+      "prior_period_revenue": 4289352.53,
+      "cogs": 2859282.82,
+      "operating_expenses": 628817.67,
+      "ebit": 905772.5,
+      "interest_expense": 422319.96,
+      "net_income": 362589.41,
+      "total_assets": 4174435.6,
+      "current_assets": 720627.01,
+      "current_liabilities": 687168.13,
+      "total_liabilities": 3190132.8,
+      "shareholder_equity": 984302.8,
+      "retained_earnings": 108780.34,
+      "total_debt_service": 981561.94
+    },
+    "ratios": {
+      "dscr": 0.92,
+      "current_ratio": 1.05,
+      "debt_to_equity": 3.24,
+      "interest_coverage": 2.14,
+      "revenue_growth_pct": 2.4,
+      "altman_z": 1.88,
+      "altman_zone": "grey"
+    },
+    "risk_profile": "overleveraged",
+    "expected_verdict": "decline"
+  },
+  {
+    "statement": {
+      "company_id": "SME-OVER-003",
+      "period": "FY2025-Q4",
+      "revenue": 2608786.21,
+      "prior_period_revenue": 2587437.45,
+      "cogs": 1570593.83,
+      "operating_expenses": 479277.38,
+      "ebit": 558914.99,
+      "interest_expense": 432164.89,
+      "net_income": 95062.58,
+      "total_assets": 2558464.18,
+      "current_assets": 441429.9,
+      "current_liabilities": 410373.9,
+      "total_liabilities": 1957636.09,
+      "shareholder_equity": 600828.09,
+      "retained_earnings": 103842.73,
+      "total_debt_service": 758466.92
+    },
+    "ratios": {
+      "dscr": 0.74,
+      "current_ratio": 1.08,
+      "debt_to_equity": 3.26,
+      "interest_coverage": 1.29,
+      "revenue_growth_pct": 0.8,
+      "altman_z": 1.87,
+      "altman_zone": "grey"
+    },
+    "risk_profile": "overleveraged",
+    "expected_verdict": "decline"
+  },
+  {
+    "statement": {
+      "company_id": "SME-OVER-004",
+      "period": "FY2025-Q4",
+      "revenue": 7958616.33,
+      "prior_period_revenue": 7942375.72,
+      "cogs": 5083222.15,
+      "operating_expenses": 1148382.44,
+      "ebit": 1727011.74,
+      "interest_expense": 1122319.97,
+      "net_income": 453518.82,
+      "total_assets": 7606638.01,
+      "current_assets": 1428553.91,
+      "current_liabilities": 1323437.18,
+      "total_liabilities": 6296403.73,
+      "shareholder_equity": 1310234.28,
+      "retained_earnings": 173327.91,
+      "total_debt_service": 1901601.93
+    },
+    "ratios": {
+      "dscr": 0.91,
+      "current_ratio": 1.08,
+      "debt_to_equity": 4.81,
+      "interest_coverage": 1.54,
+      "revenue_growth_pct": 0.2,
+      "altman_z": 1.87,
+      "altman_zone": "grey"
+    },
+    "risk_profile": "overleveraged",
+    "expected_verdict": "decline"
+  },
+  {
+    "statement": {
+      "company_id": "SME-OVER-005",
+      "period": "FY2025-Q4",
+      "revenue": 5169544.37,
+      "prior_period_revenue": 5059930.14,
+      "cogs": 3326362.94,
+      "operating_expenses": 730726.08,
+      "ebit": 1112455.35,
+      "interest_expense": 633568.2,
+      "net_income": 359165.36,
+      "total_assets": 5384984.86,
+      "current_assets": 1481327.32,
+      "current_liabilities": 1176592.74,
+      "total_liabilities": 4364560.29,
+      "shareholder_equity": 1020424.57,
+      "retained_earnings": 155332.13,
+      "total_debt_service": 1461827.21
+    },
+    "ratios": {
+      "dscr": 0.76,
+      "current_ratio": 1.26,
+      "debt_to_equity": 4.28,
+      "interest_coverage": 1.76,
+      "revenue_growth_pct": 2.2,
+      "altman_z": 1.76,
+      "altman_zone": "grey"
+    },
+    "risk_profile": "overleveraged",
+    "expected_verdict": "decline"
+  },
+  {
+    "statement": {
+      "company_id": "SME-DECL-001",
+      "period": "FY2025-Q4",
+      "revenue": 6631627.45,
+      "prior_period_revenue": 7585992.17,
+      "cogs": 5129474.88,
+      "operating_expenses": 1501222.72,
+      "ebit": 929.84,
+      "interest_expense": 72679.27,
+      "net_income": -71749.43,
+      "total_assets": 8591272.59,
+      "current_assets": 2642426.42,
+      "current_liabilities": 2415445.95,
+      "total_liabilities": 5823974.89,
+      "shareholder_equity": 2767297.7,
+      "retained_earnings": 115738.28,
+      "total_debt_service": 132632.55
+    },
+    "ratios": {
+      "dscr": 0.01,
+      "current_ratio": 1.09,
+      "debt_to_equity": 2.1,
+      "interest_coverage": 0.01,
+      "revenue_growth_pct": -12.6,
+      "altman_z": 1.0,
+      "altman_zone": "distress"
+    },
+    "risk_profile": "declining",
+    "expected_verdict": "decline"
+  },
+  {
+    "statement": {
+      "company_id": "SME-DECL-002",
+      "period": "FY2025-Q4",
+      "revenue": 3360436.94,
+      "prior_period_revenue": 3838010.97,
+      "cogs": 2428478.58,
+      "operating_expenses": 679878.27,
+      "ebit": 252080.09,
+      "interest_expense": 90084.77,
+      "net_income": 121496.5,
+      "total_assets": 3979322.91,
+      "current_assets": 728972.05,
+      "current_liabilities": 907054.24,
+      "total_liabilities": 2601992.86,
+      "shareholder_equity": 1377330.05,
+      "retained_earnings": 119765.08,
+      "total_debt_service": 153360.77
+    },
+    "ratios": {
+      "dscr": 1.64,
+      "current_ratio": 0.8,
+      "debt_to_equity": 1.89,
+      "interest_coverage": 2.8,
+      "revenue_growth_pct": -12.4,
+      "altman_z": 1.26,
+      "altman_zone": "grey"
+    },
+    "risk_profile": "declining",
+    "expected_verdict": "decline"
+  },
+  {
+    "statement": {
+      "company_id": "SME-DECL-003",
+      "period": "FY2025-Q4",
+      "revenue": 7928228.35,
+      "prior_period_revenue": 9471062.19,
+      "cogs": 5738105.27,
+      "operating_expenses": 1725475.72,
+      "ebit": 464647.36,
+      "interest_expense": 153930.38,
+      "net_income": 233037.74,
+      "total_assets": 10323589.2,
+      "current_assets": 1772842.72,
+      "current_liabilities": 2267789.2,
+      "total_liabilities": 6644364.83,
+      "shareholder_equity": 3679224.37,
+      "retained_earnings": 257886.04,
+      "total_debt_service": 310409.41
+    },
+    "ratios": {
+      "dscr": 1.5,
+      "current_ratio": 0.78,
+      "debt_to_equity": 1.81,
+      "interest_coverage": 3.02,
+      "revenue_growth_pct": -16.3,
+      "altman_z": 1.13,
+      "altman_zone": "distress"
+    },
+    "risk_profile": "declining",
+    "expected_verdict": "decline"
+  },
+  {
+    "statement": {
+      "company_id": "SME-DECL-004",
+      "period": "FY2025-Q4",
+      "revenue": 5917868.26,
+      "prior_period_revenue": 6959160.08,
+      "cogs": 4084355.36,
+      "operating_expenses": 1496314.36,
+      "ebit": 337198.53,
+      "interest_expense": 137316.12,
+      "net_income": 149911.81,
+      "total_assets": 7614761.53,
+      "current_assets": 2118776.33,
+      "current_liabilities": 2118657.3,
+      "total_liabilities": 4734134.64,
+      "shareholder_equity": 2880626.88,
+      "retained_earnings": -421849.04,
+      "total_debt_service": 294351.77
+    },
+    "ratios": {
+      "dscr": 1.15,
+      "current_ratio": 1.0,
+      "debt_to_equity": 1.64,
+      "interest_coverage": 2.46,
+      "revenue_growth_pct": -15.0,
+      "altman_z": 1.12,
+      "altman_zone": "distress"
+    },
+    "risk_profile": "declining",
+    "expected_verdict": "decline"
+  },
+  {
+    "statement": {
+      "company_id": "SME-DECL-005",
+      "period": "FY2025-Q4",
+      "revenue": 6804941.41,
+      "prior_period_revenue": 8142785.24,
+      "cogs": 4950599.09,
+      "operating_expenses": 1579501.39,
+      "ebit": 274840.94,
+      "interest_expense": 136379.23,
+      "net_income": 103846.28,
+      "total_assets": 8992428.13,
+      "current_assets": 1881799.9,
+      "current_liabilities": 2450255.62,
+      "total_liabilities": 5117192.98,
+      "shareholder_equity": 3875235.15,
+      "retained_earnings": -599323.68,
+      "total_debt_service": 242970.13
+    },
+    "ratios": {
+      "dscr": 1.13,
+      "current_ratio": 0.77,
+      "debt_to_equity": 1.32,
+      "interest_coverage": 2.02,
+      "revenue_growth_pct": -16.4,
+      "altman_z": 1.07,
+      "altman_zone": "distress"
+    },
+    "risk_profile": "declining",
+    "expected_verdict": "decline"
+  }
+]

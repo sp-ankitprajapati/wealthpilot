@@ -9,4 +9,6 @@ from pathlib import Path
 # src/wealthpilot/paths.py -> parent=wealthpilot, .parent=src, .parent=repo root
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 DATA_DIR = REPO_ROOT / "data"
+if not (DATA_DIR / "eval_cases.json").is_file():
+    DATA_DIR = Path(__file__).resolve().parent / "data"
 EVAL_CASES_PATH = DATA_DIR / "eval_cases.json"

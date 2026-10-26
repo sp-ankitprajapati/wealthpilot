@@ -4,17 +4,17 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "wealthpilot"
-version = "0.1.0"
+version = "0.2.0"
 description = "An AI agent for SME loan underwriting and credit research"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "pydantic>=2.0",
-    "langgraph>=1.0",
+    "pydantic>=2,<3",
+    "langgraph>=1,<2",
     "langgraph-checkpoint-sqlite",
-    "langchain-core>=1.0",
-    "langchain-chroma",
-    "chromadb",
+    "langchain-core>=1,<2",
+    "langchain-chroma>=1,<2",
+    "chromadb>=1,<2",
     "mcp>=2,<3",
 ]
 
@@ -23,7 +23,14 @@ gemini = ["langchain-google-genai", "google-genai"]
 claude = ["langchain-anthropic", "anthropic"]
 grok = ["langchain-xai"]
 local-embeddings = ["langchain-huggingface", "sentence-transformers"]
-dev = ["pytest"]
+dev = ["pytest>=8,<10"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+wealthpilot = ["data/*.json"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src", "tests"]
+testpaths = ["tests"]

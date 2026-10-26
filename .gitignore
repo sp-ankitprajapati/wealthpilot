@@ -20,3 +20,10 @@ chroma_db/
 
 # pytest
 .pytest_cache/
+
+*.sqlite
+*.sqlite-*
+build/
+dist/
+.env.*
+!.env.example

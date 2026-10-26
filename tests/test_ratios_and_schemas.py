@@ -55,11 +55,12 @@ class TestRatioMath:
         fs = _make_statement(cogs=700_000, ebit=100_000, total_debt_service=150_000)
         assert compute_ratios(fs)["dscr"] < 1.0
 
-    def test_zero_debt_service_gives_infinite_dscr_not_a_crash(self):
+    def test_zero_debt_service_is_explicitly_undefined_and_json_safe(self):
         """A debt-free SME is a real, if rare, case — total_debt_service
         can legitimately be 0. Dividing by it must not crash the graph."""
         fs = _make_statement(total_debt_service=0)
-        assert compute_ratios(fs)["dscr"] == float("inf")
+        assert compute_ratios(fs)["dscr"] is None
+        assert "dscr" in compute_ratios(fs)["undefined_ratios"]
 
     def test_current_ratio(self):
         fs = _make_statement(current_assets=300_000, current_liabilities=150_000)

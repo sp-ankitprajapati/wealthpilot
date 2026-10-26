@@ -1,0 +1,23 @@
+{
+  "command": "Fresh interpreter imports wealthpilot.mcp_server",
+  "trials_s": [
+    2.140513800084591,
+    2.091636799974367,
+    2.171418699901551
+  ],
+  "median_s": 2.140513800084591,
+  "runtime": {
+    "pydantic": "2.14.1",
+    "scikit-learn": "1.9.1",
+    "fastapi": "0.162.0",
+    "streamlit": "1.66.1",
+    "reportlab": "4.4.9",
+    "langgraph": "1.2.17",
+    "langchain-core": "1.7.0",
+    "langchain-chroma": "1.1.0",
+    "chromadb": "1.5.9",
+    "mcp": "2.3.0",
+    "pytest": "9.1.1"
+  },
+  "limitation": "Fresh processes, not OS cold-cache or request latency. Historical7.6s->1.06s comparison was not reproduced."
+}

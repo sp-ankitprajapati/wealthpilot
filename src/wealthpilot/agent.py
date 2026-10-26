@@ -49,15 +49,22 @@ def get_model(provider: str):
     the WealthPilot Toolkit's Ch. 01. Each import is lazy (inside the
     branch, not at module top) so you only need the ONE provider package
     actually installed, not all three."""
+    if not os.getenv("WEALTHPILOT_MODEL"):
+        raise ValueError(
+            "Set WEALTHPILOT_MODEL to a currently available model for your chosen provider"
+        )
     if provider == "gemini":
         from langchain_google_genai import ChatGoogleGenerativeAI
-        return ChatGoogleGenerativeAI(model="gemini-2.5-flash")
+
+        return ChatGoogleGenerativeAI(model=os.environ["WEALTHPILOT_MODEL"])
     elif provider == "claude":
         from langchain_anthropic import ChatAnthropic
-        return ChatAnthropic(model="claude-sonnet-4-6")
+
+        return ChatAnthropic(model=os.environ["WEALTHPILOT_MODEL"])
     elif provider == "grok":
         from langchain_xai import ChatXAI
-        return ChatXAI(model="grok-4.3")
+
+        return ChatXAI(model=os.environ["WEALTHPILOT_MODEL"])
     else:
         raise ValueError(f"unknown provider: {provider!r} (use gemini/claude/grok)")
 
@@ -77,28 +84,39 @@ if __name__ == "__main__":
     # Live run against a real provider — needs an API key in the
     # environment (see the Toolkit's Setup chapter for which env var).
     provider = os.getenv("WEALTHPILOT_PROVIDER", "gemini")
-    key_var = {"gemini": "GOOGLE_API_KEY", "claude": "ANTHROPIC_API_KEY", "grok": "XAI_API_KEY"}[provider]
+    key_var = {
+        "gemini": "GOOGLE_API_KEY",
+        "claude": "ANTHROPIC_API_KEY",
+        "grok": "XAI_API_KEY",
+    }[provider]
 
     if not os.getenv(key_var):
         print(f"No {key_var} found in the environment.")
-        print(f"Set it, or set WEALTHPILOT_PROVIDER to a different provider, then re-run:")
+        print(
+            f"Set it, or set WEALTHPILOT_PROVIDER to a different provider, then re-run:"
+        )
         print(f"  export {key_var}=...")
         print(f"  python3 -m wealthpilot.agent")
     else:
         import json
         from .paths import EVAL_CASES_PATH
+
         with open(EVAL_CASES_PATH) as f:
             eval_cases = json.load(f)
         sample_case = eval_cases[10]  # an overleveraged case
 
         model = get_model(provider)
         app = build_graph(model)
-        result = app.invoke({
-            "messages": [
-                HumanMessage(content=(
-                    f"{SYSTEM_PROMPT}\n\nHere is the financial statement:\n"
-                    f"{json.dumps(sample_case['statement'])}"
-                ))
-            ]
-        })
+        result = app.invoke(
+            {
+                "messages": [
+                    HumanMessage(
+                        content=(
+                            f"{SYSTEM_PROMPT}\n\nHere is the financial statement:\n"
+                            f"{json.dumps(sample_case['statement'])}"
+                        )
+                    )
+                ]
+            }
+        )
         print(result["messages"][-1].content)

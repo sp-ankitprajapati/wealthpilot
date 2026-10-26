@@ -9,6 +9,9 @@ ever needing to know which.
 """
 
 import json
+from uuid import uuid4
+from typing import Annotated
+from pydantic import Field
 
 from langchain_core.tools import tool
 from langchain_chroma import Chroma
@@ -16,7 +19,9 @@ from langchain_chroma import Chroma
 from .policy_docs import POLICY_DOCS
 
 
-def _simple_recursive_split(text: str, chunk_size: int, chunk_overlap: int, separators: list[str]) -> list[str]:
+def _simple_recursive_split(
+    text: str, chunk_size: int, chunk_overlap: int, separators: list[str]
+) -> list[str]:
     """Minimal recursive character splitter -- try each separator in
     priority order, keep pieces under chunk_size, fall back to the next
     separator only for pieces still too big.
@@ -50,7 +55,9 @@ def _simple_recursive_split(text: str, chunk_size: int, chunk_overlap: int, sepa
             if current:
                 chunks.append(current)
             if len(part) > chunk_size:
-                chunks.extend(_simple_recursive_split(part, chunk_size, chunk_overlap, rest))
+                chunks.extend(
+                    _simple_recursive_split(part, chunk_size, chunk_overlap, rest)
+                )
                 current = ""
             else:
                 current = part
@@ -59,7 +66,9 @@ def _simple_recursive_split(text: str, chunk_size: int, chunk_overlap: int, sepa
     return chunks
 
 
-def chunk_policy_docs(docs: list[dict], max_clause_chars: int = 800) -> tuple[list[str], list[dict]]:
+def chunk_policy_docs(
+    docs: list[dict], max_clause_chars: int = 800
+) -> tuple[list[str], list[dict]]:
     """Returns (texts, metadatas) — kept as parallel lists because that's
     the exact shape Chroma.from_texts() wants, not because it's the
     prettiest data structure.
@@ -92,7 +101,10 @@ def chunk_policy_docs(docs: list[dict], max_clause_chars: int = 800) -> tuple[li
                 metadatas.append({"source": doc["source"], "clause_id": clause_id})
             else:
                 for sub in _simple_recursive_split(
-                    clause_text, chunk_size=max_clause_chars, chunk_overlap=60, separators=["\n\n", "\n", ". "]
+                    clause_text,
+                    chunk_size=max_clause_chars,
+                    chunk_overlap=60,
+                    separators=["\n\n", "\n", ". "],
                 ):
                     texts.append(sub)
                     metadatas.append({"source": doc["source"], "clause_id": clause_id})
@@ -101,7 +113,12 @@ def chunk_policy_docs(docs: list[dict], max_clause_chars: int = 800) -> tuple[li
 
 def build_policy_index(docs: list[dict], embeddings) -> Chroma:
     texts, metadatas = chunk_policy_docs(docs)
-    return Chroma.from_texts(texts=texts, embedding=embeddings, metadatas=metadatas)
+    return Chroma.from_texts(
+        texts=texts,
+        embedding=embeddings,
+        metadatas=metadatas,
+        collection_name="wealthpilot-" + uuid4().hex,
+    )
 
 
 def make_retrieve_policy_tool(vectorstore: Chroma):
@@ -112,7 +129,10 @@ def make_retrieve_policy_tool(vectorstore: Chroma):
     that."""
 
     @tool
-    def retrieve_policy(query: str, k: int = 4) -> str:
+    def retrieve_policy(
+        query: Annotated[str, Field(min_length=1)],
+        k: Annotated[int, Field(ge=1, le=20)] = 4,
+    ) -> str:
         """Retrieve relevant SME underwriting policy clauses for a given
         risk question (e.g. "is high leverage a decline reason?" or "what
         happens when DSCR is below 1.0?"). Returns a JSON array of objects
@@ -122,7 +142,11 @@ def make_retrieve_policy_tool(vectorstore: Chroma):
         """
         results = vectorstore.similarity_search(query, k=k)
         payload = [
-            {"text": r.page_content, "source": r.metadata["source"], "clause": r.metadata["clause_id"]}
+            {
+                "text": r.page_content,
+                "source": r.metadata["source"],
+                "clause": r.metadata["clause_id"],
+            }
             for r in results
         ]
         # explicit json.dumps — see Week 2's tools.py for exactly why an
@@ -139,11 +163,17 @@ if __name__ == "__main__":
     # on your own machine.
     from langchain_huggingface import HuggingFaceEmbeddings
 
-    embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
+    embeddings = HuggingFaceEmbeddings(
+        model_name="sentence-transformers/all-MiniLM-L6-v2"
+    )
     index = build_policy_index(POLICY_DOCS, embeddings)
     tool_fn = make_retrieve_policy_tool(index)
 
-    for query in ["is high leverage a decline reason?", "what if DSCR is below 1.0?", "revenue dropped this year, is that a problem?"]:
+    for query in [
+        "is high leverage a decline reason?",
+        "what if DSCR is below 1.0?",
+        "revenue dropped this year, is that a problem?",
+    ]:
         print(f"\nQ: {query}")
         results = json.loads(tool_fn.invoke({"query": query, "k": 2}))
         for r in results:

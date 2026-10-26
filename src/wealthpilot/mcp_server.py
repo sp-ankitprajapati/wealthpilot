@@ -81,7 +81,10 @@ def build_server(retrieve_policy_tool) -> MCPServer:
         question (e.g. "is high leverage a decline reason?"). Returns a
         JSON array of objects with 'text', 'source', and 'clause'.
         """
-        return retrieve_policy_tool.invoke({"query": query, "k": k})
+        try:
+            return retrieve_policy_tool.invoke({"query": query, "k": k})
+        except (ValueError, TypeError) as exc:
+            raise ToolError(f"Invalid policy query: {exc}") from exc
 
     return mcp
 

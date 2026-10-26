@@ -105,6 +105,9 @@ class TestHappyPath:
         findings = json.loads(result.content[0].text)
         assert len(findings) == 2
         assert all({"text", "source", "clause"} <= set(f.keys()) for f in findings)
+        with pytest.raises(ToolError) as exc_info:
+            run(server.call_tool("retrieve_policy", {"query": "leverage", "k": 0}))
+        assert not isinstance(exc_info.value, UnexpectedToolError)
 
     def test_healthy_case_end_to_end_through_mcp_produces_no_flags(self, server):
         """The same three-tool chain an MCP client would actually make:

@@ -1,3 +1,5 @@
+> Historical build log. Current89-test result, JSON contracts, revision controls and measured timing are in README.md and results/. Historical timing/provider claims below are not new measurements.
+
 # Build Log
 
 Design decisions and real bugs, week by week — written to actually be

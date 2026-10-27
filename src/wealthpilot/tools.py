@@ -12,9 +12,24 @@ the agent.
 import json
 
 from langchain_core.tools import tool
+from pydantic import BaseModel, ConfigDict
+from typing import Literal
 
 from .schemas import FinancialStatement
 from .ratios import compute_ratios
+
+
+class RatioValues(BaseModel):
+    model_config = ConfigDict(allow_inf_nan=False, extra="forbid")
+    dscr: float | None
+    current_ratio: float | None
+    debt_to_equity: float | None
+    interest_coverage: float | None
+    revenue_growth_pct: float | None
+    altman_z: float | None
+    altman_zone: Literal["safe", "grey", "distress", "undefined"]
+    equity_nonpositive: bool = False
+    undefined_ratios: list[str] = []
 
 
 @tool
@@ -50,18 +65,36 @@ def detect_red_flags(ratios_json: str) -> str:
     Call this AFTER calculate_ratios, never before — it has nothing to
     check without the ratios.
     """
-    ratios = json.loads(ratios_json)
+    ratios = RatioValues.model_validate_json(ratios_json).model_dump()
     flags = []
-    if ratios["dscr"] < 1.0:
-        flags.append(f"DSCR {ratios['dscr']} is below 1.0 — cannot cover debt service from operating income alone")
+    if ratios["dscr"] is not None and ratios["dscr"] < 1.0:
+        flags.append(
+            f"DSCR {ratios['dscr']} is below 1.0 — cannot cover debt service from operating income alone"
+        )
     if ratios["altman_zone"] == "distress":
-        flags.append(f"Altman Z'-score {ratios['altman_z']} is in the distress zone (below 1.23)")
-    if ratios["current_ratio"] < 1.0:
-        flags.append(f"Current ratio {ratios['current_ratio']} is below 1.0 — short-term liabilities exceed short-term assets")
-    if ratios["debt_to_equity"] > 2.5:
-        flags.append(f"Debt-to-equity {ratios['debt_to_equity']} exceeds 2.5 — high leverage relative to owner equity")
-    if ratios["revenue_growth_pct"] < 0:
-        flags.append(f"Revenue declined {abs(ratios['revenue_growth_pct'])}% year-over-year")
+        flags.append(
+            f"Altman Z'-score {ratios['altman_z']} is in the distress zone (below 1.23)"
+        )
+    if ratios["current_ratio"] is not None and ratios["current_ratio"] < 1.0:
+        flags.append(
+            f"Current ratio {ratios['current_ratio']} is below 1.0 — short-term liabilities exceed short-term assets"
+        )
+    if ratios["debt_to_equity"] is not None and ratios["debt_to_equity"] > 2.5:
+        flags.append(
+            f"Debt-to-equity {ratios['debt_to_equity']} exceeds 2.5 — high leverage relative to owner equity"
+        )
+    if ratios["revenue_growth_pct"] is not None and ratios["revenue_growth_pct"] < 0:
+        flags.append(
+            f"Revenue declined {abs(ratios['revenue_growth_pct'])}% year-over-year"
+        )
+    if ratios.get("equity_nonpositive"):
+        flags.append(
+            "Nonpositive book equity requires manual review; a negative debt-to-equity ratio does not indicate low risk"
+        )
+    if ratios.get("undefined_ratios"):
+        flags.append(
+            "Undefined ratios require context: " + ", ".join(ratios["undefined_ratios"])
+        )
     # Explicit json.dumps here, not "return flags". LangGraph's ToolNode
     # auto-serializes a dict return to a JSON string, but an EMPTY list
     # return is left as a raw Python list (an empty list is technically
@@ -81,6 +114,7 @@ if __name__ == "__main__":
     # set, with NO agent and NO LLM involved yet. If these don't produce
     # sensible flags per profile, wiring an LLM on top only hides the bug.
     from .paths import EVAL_CASES_PATH
+
     with open(EVAL_CASES_PATH) as f:
         eval_cases = json.load(f)
 
@@ -88,7 +122,9 @@ if __name__ == "__main__":
         statement_json = json.dumps(case["statement"])
         ratios = calculate_ratios.invoke({"statement_json": statement_json})
         flags = json.loads(detect_red_flags.invoke({"ratios_json": json.dumps(ratios)}))
-        print(f"\n{case['statement']['company_id']}  (profile: {case['risk_profile']}, expected: {case['expected_verdict']})")
+        print(
+            f"\n{case['statement']['company_id']}  (profile: {case['risk_profile']}, expected: {case['expected_verdict']})"
+        )
         for flag in flags:
             print(f"  ⚠ {flag}")
         if not flags:

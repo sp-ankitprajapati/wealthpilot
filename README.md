@@ -1,191 +1,84 @@
 # WealthPilot
 
-An AI agent for SME loan underwriting and credit research — built as a
-mentor-guided project, incrementally, one week at a time.
+A portfolio SME-underwriting workflow using deterministic ratio tools, policy RAG, LangGraph case checkpoints and explicit human approval. It exposes three tools through an MCP 2.x server. The original single-agent loop remains a separate learning example; the case graph is the interface with the approval gate.
 
-WealthPilot takes an SME's financial statements and produces a cited,
-policy-grounded underwriting recommendation (approve / review / decline),
-using a multi-agent LangGraph pipeline: deterministic financial-ratio
-tools, a RAG layer over lending policy documents, and a human-approval
-checkpoint before any final decision.
+## Verified status
 
-## Why this project
+**89 local tests pass**, including the original 65 cases and24 additional boundary cases. New checks cover verdict ambiguity, typed recommendations, malformed human decisions, changed statements, injected derived state, nonfinite financial values, JSON-safe zero denominators, negative book equity and policy-index isolation. CI runs the suite without provider credentials or model downloads.
 
-Built to sit at the intersection of two things: agentic AI engineering
-(LangGraph orchestration, RAG, MCP, tool use, eval-driven development) and
-domain fluency in credit/financial analysis. Full design rationale for
-each week — including three real bugs found by actually running the code,
-not just writing it — is in [`docs/BUILD_LOG.md`](docs/BUILD_LOG.md).
-
-## Status
-
-| Week | Scope | Status |
-|---|---|---|
-| 1 | Financial statement schema, ratio engine, labeled synthetic eval set | ✅ done |
-| 2 | Single-agent LangGraph loop (ratio + red-flag tools) | ✅ done |
-| 3 | Policy RAG (structure-aware chunking, Chroma retrieval, citations) | ✅ done |
-| 4 | Multi-agent orchestration + persistent case memory | ✅ done |
-| 5 | MCP server exposing the underwriting tools | ✅ done |
-| 6 | Human-in-the-loop approval + bias/fairness eval | ✅ done |
-| 7 | Observability, eval harness, final polish | ✅ done |
-
-All 7 weeks of the original build plan are complete. 65 tests pass across the full test suite (`pytest tests/ -v`). See [`docs/BUILD_LOG.md`](docs/BUILD_LOG.md) for the complete week-by-week story, including every real bug found along the way — that log is the actual interview-prep material this project produced, arguably more than the code itself.
-
-## Architecture
-
-```
-Financial statement (JSON)
-        │
-        ▼
-┌───────────────────┐     ┌──────────────────────┐
-│ calculate_ratios   │────▶│ detect_red_flags      │
-│ (DSCR, D/E, Z'...) │     │ (5 threshold checks)  │
-└───────────────────┘     └──────────────────────┘
-        │                            │
-        └──────────────┬─────────────┘
-                        ▼
-              ┌───────────────────┐        ┌────────────────────┐
-              │   LangGraph agent  │◀──────▶│  retrieve_policy     │
-              │ (provider-agnostic)│        │  (Chroma + citations)│
-              └───────────────────┘        └────────────────────┘
-                        │
-                        ▼
-              Cited risk summary + RECOMMENDED verdict
-                        │
-                        ▼
-              ┌────────────────────┐
-              │   human_approval    │   interrupt() -- pauses here for
-              │  (Week 6, HITL)     │   a real reviewer's approve /
-              └────────────────────┘   send-back / override decision
-                        │
-                        ▼
-              final_status (the actual decision)
-```
-
-Every tool returns a **deterministic, tested** result — the LLM decides
-*when* to call a tool and *how to interpret* the result, never does the
-arithmetic itself. See `src/wealthpilot/ratios.py` for why the Altman
-Z**'**-score (private-firm variant), not the original public-company
-formula, is used here.
-
-## Choosing an LLM provider
-
-The agent is provider-agnostic — Claude, Gemini, or Grok all plug in via
-LangChain's chat-model wrapper with no changes to the graph itself. For a
-free/no-budget build, **Gemini's free tier is the most sustainable**
-(Grok's is promotional credits, not permanent; Claude's API has no
-ongoing free tier at all). See `.env.example` and `get_model()` in
-`src/wealthpilot/agent.py`.
+Tests use controlled models/embeddings to verify orchestration. They do not measure live LLM underwriting quality, real population fairness or deployment suitability. The reported historical7.6 s to 1.06 s import improvement remains build-log history. A new reproducible three-process measurement is saved in [startup benchmark](results/startup_benchmark.json), with median 2.14 s on the checked Windows environment. Fresh-process import timing is different from OS cold-cache or request latency.
 
 ## Setup
 
-```bash
-python -m venv .venv && source .venv/bin/activate
-pip install -e ".[dev,local-embeddings,gemini]"   # swap gemini -> claude / grok
-cp .env.example .env   # fill in your provider's key
-```
-
-Generate the labeled eval set (already included in `data/eval_cases.json`,
-regenerate only if you change the synthetic-data ranges):
+Use Python 3.12 in a fresh environment:
 
 ```bash
-python -m wealthpilot.synthetic_data
+python -m venv .venv
+# Activate .venv for your shell.
+python -m pip install -e ".[dev]"
+python -m pytest tests -q
+python -m wealthpilot.offline_demo
 ```
 
-Run the tests:
+The offline demo uses real deterministic ratios and bundled policy text, controlled lexical retrieval, and a fixed review recommendation. It pauses for human approval, then explicitly sends the demonstration case back. Its output labels that no live LLM quality was measured. No keys or downloaded embedding weights are needed.
 
-```bash
-pytest tests/ -v
-```
+## Case workflow
 
-Run the agent live (needs a real API key — see Setup):
+1. Validate statement JSON and reject nonfinite values or negative expense/debt-service amounts.
+2. Compute ratios and risk flags with Python tools.
+3. Retrieve policy clauses for flagged cases, retaining source and clause identifiers.
+4. Produce a recommended verdict using a typed approve/review/decline schema when the model supports structured output. Text-only test doubles must begin with an exact verdict prefix. Invalid output routes to manual review.
+5. Pause with a checkpoint. A strictly Boolean human approved decision and validated optional override control the final outcome.
 
-```bash
-python -m wealthpilot.agent
-```
+The final-review context excludes applicant_region and the raw statement. Tests show region exclusion for otherwise identical synthetic financials in this multi-agent pathway. This limited safeguard does not establish real-world fairness or protect against all proxies or reviewer effects. The older single-agent prompt receives the supplied statement and is outside this claim.
 
-Run the MCP server (needs `mcp[cli]` or a real MCP client to actually connect — Claude Desktop is the fastest way to try it: point its MCP settings at `python -m wealthpilot.mcp_server`):
+## Revisions and human approval
 
-```bash
-python -m wealthpilot.mcp_server
-```
+Use build_case_graph(..., checkpointer=...) and run_case(app, config, case_id=..., raw_statement_json=...). Supply a stable configurable.thread_id for pause/resume. Resume with LangGraph Command(resume={"approved":true,"notes":"..."}); optional override_verdict must be approve/review/decline and requires approved=true.
 
-Run the eval harness against all 20 labeled cases (needs a real API key):
+The wrapper accepts only source input keys and refuses changed statement/case inputs on an existing thread. Use a **new thread ID for each revised statement**. A supervisor check also detects changed raw statements behind cached derived state. This prevents an old completed recommendation from silently representing new financial numbers. Direct app.invoke/update_state calls are low-level APIs; callers must preserve the same lifecycle contract.
 
-```bash
-python -m wealthpilot.eval_harness
-```
+final_status values are approve/review/decline when the human accepts or overrides the recommendation, sent_back when the human declines to accept it, and rejected_invalid_data for failed parsing. The model recommendation alone does not complete a case.
 
-Run the demo (a single case, formatted for actually presenting the system — needs a real API key):
+## Numeric contracts
+
+Ratios use the project's simplified EBIT-based DSCR and private-firm Altman Z-prime formula. Undefined ratios are JSON null with an explicit undefined_ratios list, rather than nonstandard Infinity. A zero prior revenue does not become fabricated 0% growth. Nonpositive book equity receives an explicit manual-review flag rather than appearing reassuring through a negative debt-to-equity ratio. The public flagging tool validates its ratio schema.
+
+These are educational formulas and synthetic policy thresholds, not a validated credit-risk model or lending advice. Altman-model applicability varies by business type and requires domain assessment. The application does not implement real document OCR, default prediction, portfolio validation or regulated underwriting controls.
+
+## Live providers and embeddings
+
+Install only the extra you intend to use: `.[gemini]`, `.[claude]` or `.[grok]`. Set WEALTHPILOT_PROVIDER, WEALTHPILOT_MODEL and the matching GOOGLE_API_KEY / ANTHROPIC_API_KEY / XAI_API_KEY in the process environment. Choose a model available to your account. The project does not automatically load .env and makes no free-tier availability claim.
+
+For the live Chroma path, install `.[local-embeddings]` to use Hugging Face embeddings; this may download model weights. build_policy_index creates a distinct collection per index so unrelated in-process indexes cannot silently share a default collection. The current helper creates ephemeral policy collections; case persistence comes from the supplied LangGraph checkpointer, including SQLite.
 
 ```bash
 python -m wealthpilot.demo
+python -m wealthpilot.eval_harness
+python -m wealthpilot.mcp_server
 ```
 
-## A note on how the tests are split
+These live entry points need the relevant provider/embedding configuration. The eval harness uses fresh run-specific thread IDs to avoid old checkpoint decisions contaminating a new evaluation. Its automatic approval exists only for scoring controlled evaluations and is not the production human-review policy.
 
-Every week's tests split into two concerns on purpose:
+## MCP and source map
 
-- **Control-flow / plumbing** — does the graph call the right tool in the
-  right order, does chunking keep one clause per chunk, does retrieval
-  respect `k`. Fully testable right now, deterministically, with **no
-  API key and no network call** — see the `Fake*` test doubles in
-  `tests/test_agent.py` and `tests/test_rag.py`.
-- **Judgment / semantic quality** — is the model's reasoning actually
-  good, is real embedding-based retrieval actually relevant. Needs a real
-  LLM and (for Week 3) real embeddings reachable over the network — run
-  the `__main__` block in `agent.py` / `rag.py` on your own machine for
-  this, not the test suite.
+MCP 2.x exposes calculate_ratios, detect_red_flags and retrieve_policy through build_server(retrieve_tool). In-process tests check registration, outputs and anticipated ToolError exceptions; transport behavior and external client interoperability require separate client verification. This server exposes tools, not the full approval workflow.
 
-Conflating these two is a common mistake — it either makes your tests
-flaky and slow, or means you never test orchestration logic at all.
+| File | Responsibility |
+| --- | --- |
+| schemas.py / ratios.py / tools.py | Input contracts, arithmetic and flags |
+| rag.py / policy_docs.py | Clause boundaries, isolated Chroma indexes and citable results |
+| multi_agent.py | Specialist nodes, typed recommendation and strict human decision |
+| case_graph.py | Checkpoints and revision guards |
+| fairness.py | Controlled region-variant checks |
+| eval_harness.py / tracing.py | Evaluation and structured node logs |
+| mcp_server.py | Three reusable tools |
+| offline_demo.py | Honest no-key workflow demonstration |
 
-## Known sandbox limitation (Weeks 3, 5 & 7)
+Read [updated Hinglish learning guide](docs/LEARNING_HINGLISH.md), [verification evidence](results/verification.json) and [historical build log](docs/BUILD_LOG.md). Model judgment, policy retrieval relevance, proxy fairness and legal applicability still need independent live evaluation. No production-readiness claim is made.
 
-This repo was scaffolded inside a network-sandboxed environment that
-couldn't reach `huggingface.co` to download real embedding model weights,
-or any LLM provider's API. `tests/test_rag.py`, `tests/test_mcp_server.py`,
-and `tests/test_eval_harness.py` all use a deterministic bag-of-words fake
-embedding (and, for the eval harness, a rule-based fake model) to prove
-the *pipeline* works — chunking, indexing, retrieval, citation format,
-orchestration, and accuracy/confusion-matrix arithmetic. None of this
-proves real semantic retrieval quality or real LLM judgment quality. Run
-`python -m wealthpilot.eval_harness` or `python -m wealthpilot.demo` on a
-machine with normal internet access and a real API key to see both for
-real.
+## Accurate CV wording
 
-## Project layout
-
-```
-src/wealthpilot/
-  schemas.py        # FinancialStatement — the one data contract everything reads from
-  ratios.py          # DSCR, current ratio, D/E, interest coverage, Altman Z'-score
-  synthetic_data.py   # Labeled synthetic SME cases, 4 risk profiles
-  tools.py            # calculate_ratios, detect_red_flags (LangChain @tool)
-  agent.py             # Single-agent loop + provider-agnostic model factory (Week 2)
-  policy_docs.py       # Illustrative SME lending policy text (Week 3)
-  rag.py               # Chunking, Chroma indexing, retrieve_policy tool (Week 3)
-  multi_agent.py       # CaseState, 4 specialist nodes, supervisor router (Week 4)
-  case_graph.py        # build_case_graph + run_case (checkpointed multi-agent graph)
-  mcp_server.py         # MCP server exposing the same tools via mcp 2.x's MCPServer (Week 5)
-  fairness.py           # Region-variant case generation + disparate impact ratio (Week 6)
-  tracing.py            # traced_node -- structured logging wrapper for any graph node (Week 7)
-  eval_harness.py        # Runs the full graph against data/eval_cases.json, reports accuracy (Week 7)
-  demo.py                # Single-case walkthrough with formatted output -- the interview demo script
-  paths.py             # Single source of truth for data file locations
-tests/                # pytest, organized by SOURCE MODULE, not by week --
-                        # test_case_graph.py covers case_graph.py AND
-                        # multi_agent.py (orchestration, persistence, and
-                        # human-in-the-loop approval together, since all
-                        # three exercise the same graph); test_fairness.py
-                        # covers fairness.py; test_tracing.py and
-                        # test_eval_harness.py cover Week 7's observability
-                        # and eval harness respectively. See "how the
-                        # tests are split" above for the broader philosophy.
-data/eval_cases.json  # 20 labeled synthetic cases (5 per risk profile)
-docs/BUILD_LOG.md      # Design rationale + real bugs found each week
-```
-
-## License
-
-MIT — see [LICENSE](LICENSE).
+- Built a LangGraph underwriting prototype with deterministic ratio tools, clause-grounded policy retrieval, persistent case checkpoints and strict human approval.
+- Added typed verdict validation, revision isolation, finite JSON contracts and89 automated tests, including controlled region-exclusion checks.
+- Exposed calculation and research tools through MCP 2.x and published reproducible startup measurements with clearly scoped evaluation evidence.

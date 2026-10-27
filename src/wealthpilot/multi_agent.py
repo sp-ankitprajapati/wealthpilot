@@ -26,9 +26,11 @@ recommendation by itself is not a decision.
 """
 
 import json
+import re
 from typing import Optional, TypedDict, Annotated
 
-from pydantic import ValidationError
+from pydantic import BaseModel, ConfigDict, StrictBool, ValidationError
+from typing import Literal
 from langchain_core.messages import HumanMessage
 from langgraph.graph import END
 from langgraph.graph.message import add_messages
@@ -61,6 +63,7 @@ class CaseState(TypedDict, total=False):
     red_flags: list
     policy_findings: list
     recommended_verdict: str
+    recommendation_error: str
     rationale: str
     final_status: str
     reviewer_notes: str
@@ -138,38 +141,63 @@ def make_credit_researcher(model, retrieve_policy_tool):
     return credit_researcher
 
 
-def make_final_review(model):
-    """The only node that writes prose. Everything it needs (ratios,
-    red_flags, policy_findings) was already gathered deterministically or
-    semi-deterministically by earlier specialists -- this node's only job
-    is synthesis and a RECOMMENDED verdict, not fact-gathering (keeps its
-    output groundable in what's already in state, not invented numbers)
-    and not a final decision (that's human_approval's job, Week 6)."""
+class Recommendation(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    verdict: Literal["approve", "review", "decline"]
+    rationale: str
 
-    def final_review(state: CaseState) -> dict:
-        # Deliberately excludes "financial_statement" -- the raw statement,
-        # and anything on it like an applicant's region, never reaches
-        # this prompt at all. Not "trusted to be ignored" -- structurally
-        # absent from what the model can see. See fairness.py and
-        # docs/BUILD_LOG.md, Week 6, for why that distinction matters.
-        summary_input = {
-            "ratios": state.get("ratios"),
-            "red_flags": state.get("red_flags"),
-            "policy_findings": state.get("policy_findings"),
+
+class ApprovalDecision(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    approved: StrictBool
+    override_verdict: Literal["approve", "review", "decline"] | None = None
+    notes: str = ""
+
+
+def make_final_review(model):
+    """Use a typed verdict when supported; legacy fakes must start with an exact verdict."""
+    structured = (
+        model.with_structured_output(Recommendation)
+        if callable(getattr(model, "with_structured_output", None))
+        else None
+    )
+
+    def final_review(state):
+        summary = {
+            key: state.get(key) for key in ("ratios", "red_flags", "policy_findings")
         }
         prompt = (
-            "Write a short SME loan underwriting risk summary from the data "
-            "below. State a RECOMMENDED verdict — approve, review, or decline "
-            "— as the first word of your response, then justify it by citing "
-            "the specific ratios and policy clauses involved. This is a "
-            "recommendation for human review, not a final decision. Do not "
-            "introduce any number not present in the data below.\n\n"
-            + json.dumps(summary_input, indent=2)
+            "Write a short risk summary and RECOMMENDED verdict (approve/review/decline) for human review. "
+            "Use only supplied ratios and retrieved policy citations. If using text, start with exactly Approve:, Review: or Decline:. "
+            "No invented numbers. Evidence: " + json.dumps(summary, allow_nan=False)
         )
-        response = model.invoke([HumanMessage(content=prompt)])
-        text = response.content.lower()
-        verdict = next((v for v in ("approve", "review", "decline") if v in text), "review")
-        return {"recommended_verdict": verdict, "rationale": response.content, "messages": [response]}
+        try:
+            if structured is not None:
+                decision = Recommendation.model_validate(
+                    structured.invoke([HumanMessage(content=prompt)])
+                )
+                return {
+                    "recommended_verdict": decision.verdict,
+                    "rationale": decision.rationale,
+                }
+            response = model.invoke([HumanMessage(content=prompt)])
+            text = response.content if isinstance(response.content, str) else ""
+            match = re.match(r"^\s*(approve|review|decline)\s*:", text, re.IGNORECASE)
+            if not match:
+                raise ValueError(
+                    "Response does not begin with an explicit supported verdict"
+                )
+            return {
+                "recommended_verdict": match.group(1).lower(),
+                "rationale": text,
+                "messages": [response],
+            }
+        except (ValueError, TypeError) as exc:
+            return {
+                "recommended_verdict": "review",
+                "rationale": "Model output could not be validated; manual review required.",
+                "recommendation_error": str(exc),
+            }
 
     return final_review
 
@@ -194,14 +222,15 @@ def human_approval(state: CaseState) -> dict:
         "red_flags": state.get("red_flags"),
         "policy_findings": state.get("policy_findings"),
     }
-    decision = interrupt(payload)
-
-    if decision.get("approved"):
+    decision = ApprovalDecision.model_validate(interrupt(payload))
+    if decision.override_verdict is not None and not decision.approved:
+        raise ValueError("An override requires approved=true")
+    if decision.approved:
         return {
-            "final_status": decision.get("override_verdict") or state.get("recommended_verdict"),
-            "reviewer_notes": decision.get("notes", ""),
+            "final_status": decision.override_verdict or state["recommended_verdict"],
+            "reviewer_notes": decision.notes,
         }
-    return {"final_status": "sent_back", "reviewer_notes": decision.get("notes", "")}
+    return {"final_status": "sent_back", "reviewer_notes": decision.notes}
 
 
 def supervisor(state: CaseState) -> str:
@@ -217,6 +246,14 @@ def supervisor(state: CaseState) -> str:
     "final_status" (not "recommended_verdict") is the ONLY thing that
     means a case is actually done -- an AI recommendation alone must
     always still route to human_approval, never straight to END."""
+    if "financial_statement" in state and "raw_statement_json" in state:
+        parsed = FinancialStatement.model_validate_json(
+            state["raw_statement_json"]
+        ).model_dump()
+        if parsed != state["financial_statement"]:
+            raise ValueError(
+                "Changed statement requires a new thread_id/revision; old derived state cannot be reused"
+            )
     if state.get("final_status"):
         return END
     if "financial_statement" not in state:

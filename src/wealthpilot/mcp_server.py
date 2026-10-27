@@ -72,7 +72,7 @@ def build_server(retrieve_policy_tool) -> MCPServer:
         """
         try:
             return _detect_red_flags_tool.invoke({"ratios_json": ratios_json})
-        except (json.JSONDecodeError, KeyError) as e:
+        except (ValueError, KeyError, TypeError) as e:
             raise ToolError(f"Invalid ratios JSON: {e}") from e
 
     @mcp.tool()
@@ -81,7 +81,10 @@ def build_server(retrieve_policy_tool) -> MCPServer:
         question (e.g. "is high leverage a decline reason?"). Returns a
         JSON array of objects with 'text', 'source', and 'clause'.
         """
-        return retrieve_policy_tool.invoke({"query": query, "k": k})
+        try:
+            return retrieve_policy_tool.invoke({"query": query, "k": k})
+        except (ValueError, TypeError) as exc:
+            raise ToolError(f"Invalid policy query: {exc}") from exc
 
     return mcp
 
@@ -96,7 +99,9 @@ if __name__ == "__main__":
     from .policy_docs import POLICY_DOCS
     from .rag import build_policy_index, make_retrieve_policy_tool
 
-    embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
+    embeddings = HuggingFaceEmbeddings(
+        model_name="sentence-transformers/all-MiniLM-L6-v2"
+    )
     index = build_policy_index(POLICY_DOCS, embeddings)
     retrieve_tool = make_retrieve_policy_tool(index)
 

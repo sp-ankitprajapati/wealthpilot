@@ -10,10 +10,14 @@ whatever-keys-happened-to-parse.
 
 from typing import Optional
 
-from pydantic import BaseModel, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, field_validator, model_validator
 
 
 class FinancialStatement(BaseModel):
+    model_config = ConfigDict(
+        allow_inf_nan=False, extra="forbid", str_strip_whitespace=True
+    )
+
     company_id: str
     period: str  # e.g. "FY2025-Q4"
 
@@ -46,12 +50,37 @@ class FinancialStatement(BaseModel):
     # docs/BUILD_LOG.md, Week 6, for why that distinction is the point.
     applicant_region: Optional[str] = None
 
+    @field_validator("*", mode="before")
+    @classmethod
+    def reject_boolean_amounts(cls, value):
+        if isinstance(value, bool):
+            raise ValueError("Statement fields cannot be booleans")
+        return value
+
     @field_validator("revenue", "total_assets")
     @classmethod
     def must_be_positive(cls, v: float, info) -> float:
         if v <= 0:
             raise ValueError(f"{info.field_name} must be positive, got {v}")
         return v
+
+    @field_validator(
+        "prior_period_revenue",
+        "cogs",
+        "operating_expenses",
+        "interest_expense",
+        "current_assets",
+        "current_liabilities",
+        "total_liabilities",
+        "total_debt_service",
+    )
+    @classmethod
+    def nonnegative_amounts(cls, value):
+        if value < 0:
+            raise ValueError(
+                "Expense, asset, liability and debt-service amounts must be nonnegative"
+            )
+        return value
 
     @model_validator(mode="after")
     def ebit_should_roughly_match_components(self) -> "FinancialStatement":

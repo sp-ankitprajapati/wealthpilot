@@ -29,13 +29,23 @@ def build_case_graph(model, retrieve_policy_tool, checkpointer=None):
     graph.add_node("risk_analyst", traced_node(risk_analyst, "risk_analyst"))
     graph.add_node(
         "credit_researcher",
-        traced_node(make_credit_researcher(model, retrieve_policy_tool), "credit_researcher"),
+        traced_node(
+            make_credit_researcher(model, retrieve_policy_tool), "credit_researcher"
+        ),
     )
-    graph.add_node("final_review", traced_node(make_final_review(model), "final_review"))
+    graph.add_node(
+        "final_review", traced_node(make_final_review(model), "final_review")
+    )
     graph.add_node("human_approval", traced_node(human_approval, "human_approval"))
 
     graph.set_conditional_entry_point(supervisor)
-    for node in ("document_parser", "risk_analyst", "credit_researcher", "final_review", "human_approval"):
+    for node in (
+        "document_parser",
+        "risk_analyst",
+        "credit_researcher",
+        "final_review",
+        "human_approval",
+    ):
         graph.add_conditional_edges(node, supervisor)
 
     return graph.compile(checkpointer=checkpointer)
@@ -62,6 +72,25 @@ def run_case(app, config: dict, **input_updates) -> dict:
     fire, and is_awaiting_approval() below is how a caller should detect
     that case instead.
     """
+    allowed = {"case_id", "raw_statement_json"}
+    if set(input_updates) - allowed:
+        raise ValueError(
+            "Only case_id and raw_statement_json are accepted; derived state is internal"
+        )
+    saved = app.get_state(config).values if app.checkpointer is not None else {}
+    if saved:
+        for key, value in input_updates.items():
+            previous = saved.get(key)
+            same = value == previous
+            if key == "raw_statement_json":
+                import json
+
+                try:
+                    same = json.loads(value) == json.loads(previous)
+                except (ValueError, TypeError):
+                    pass
+            if not same:
+                raise ValueError("Changed input requires a new thread_id/revision")
     result = app.invoke(input_updates, config=config)
     if result is None:
         result = app.get_state(config).values

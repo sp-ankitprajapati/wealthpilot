@@ -1,26 +1,2 @@
-# Core — needed regardless of which LLM provider you use
-pydantic>=2.0
-langgraph>=1.0
-langgraph-checkpoint-sqlite
-langchain-core>=1.0
-langchain-chroma
-chromadb
-pytest
-mcp>=2,<3   # pinned -- 2.0.0 already broke 1.x's FastMCP import once
-# NOTE: langchain-text-splitters intentionally NOT here -- it pulled in
-# sentence_transformers -> torch as a transitive import (~7s per process
-# start) for one rarely-used fallback function. Replaced with a ~20-line
-# hand-rolled splitter in rag.py. See docs/BUILD_LOG.md, Week 7.
-
-# Pick ONE chat provider (see README > Choosing a provider):
-# langchain-anthropic
-# anthropic
-# --- or ---
-# langchain-google-genai
-# google-genai
-# --- or ---
-# langchain-xai
-
-# Embeddings for Week 3's policy RAG — local, free, works with any provider
-langchain-huggingface
-sentence-transformers
+# Install optional providers and model downloads explicitly, as needed.
+-e .[dev]

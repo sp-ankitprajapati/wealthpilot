@@ -77,7 +77,7 @@ MCP 2.x exposes calculate_ratios, detect_red_flags and retrieve_policy through b
 
 Read [updated Hinglish learning guide](docs/LEARNING_HINGLISH.md), [verification evidence](results/verification.json) and [historical build log](docs/BUILD_LOG.md). Model judgment, policy retrieval relevance, proxy fairness and legal applicability still need independent live evaluation. No production-readiness claim is made.
 
-## Accurate CV wording
+##Description
 
 - Built a LangGraph underwriting prototype with deterministic ratio tools, clause-grounded policy retrieval, persistent case checkpoints and strict human approval.
 - Added typed verdict validation, revision isolation, finite JSON contracts and89 automated tests, including controlled region-exclusion checks.

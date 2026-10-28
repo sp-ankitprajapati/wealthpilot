@@ -1,20 +1,4 @@
-"""
-Week 2 — Single agent, single loop.
-
-Run with: pytest test_week2.py -v
-
-The key idea here: the graph's CONTROL FLOW (does it call the right tool,
-does it stop when it should, does tool output actually reach the final
-message) is a separate concern from whether a specific LLM makes good
-judgment calls. The first is testable right now, deterministically, with
-no API key and no network call. The second needs a real model and belongs
-in a live smoke test (see agent.py's __main__), not in the test suite.
-
-FakeToolCallingModel below is a test double: it implements exactly the two
-methods build_graph() actually calls (.bind_tools(), .invoke()) and
-nothing else — enough to exercise the full agent -> tools -> agent -> END
-loop for real.
-"""
+"""Controlled tests of the single-agent tool-calling loop."""
 
 import json
 

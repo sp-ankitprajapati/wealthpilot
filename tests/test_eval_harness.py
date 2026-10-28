@@ -1,20 +1,4 @@
-"""
-Week 7 — Eval harness.
-
-Run with: pytest tests/test_eval_harness.py -v
-
-Uses TWO fakes on purpose: a rule-based one that reads the same red-flag
-strings tools.py's detect_red_flags produces (non-trivial, should score
-well against Week 1's labeled set) and a "dumb" one that always says the
-same thing (should score badly on whichever classes it doesn't match).
-If the harness's accuracy computation had a bug that made everything
-score 100% regardless of input, only testing the smart fake would never
-catch it -- the dumb fake is what proves the number means something.
-
-RuleBasedFakeModel and FakeEmbeddings are defined here (not duplicated)
-and imported by test_tracing.py, which needs them for one test that
-exercises a real graph run.
-"""
+"""Evaluation-harness checks using contrasting controlled models."""
 
 import hashlib
 import json
@@ -68,7 +52,7 @@ class RuleBasedFakeModel:
             # ~zero similarity -- confirmed this caused real, reproducible
             # non-determinism ACROSS separate process runs, most likely
             # from how Chroma breaks ties among equally-scored results.
-            # Same root cause in spirit as Week 1's unseeded-RNG test bug:
+            # Avoid ambiguous retrieval ties in the controlled fixture:
             # a fixture with a hidden source of randomness masquerading
             # as deterministic.
             query_text = content.split("concerns:")[-1].strip()

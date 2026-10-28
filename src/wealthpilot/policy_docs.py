@@ -1,18 +1,8 @@
-"""
-Week 3 — Policy RAG.
+"""Illustrative policy text for retrieval demonstrations.
 
-These are ILLUSTRATIVE policy documents I wrote for this build — not a real
-institution's actual underwriting manual. In a real deployment, swap these
-for your own bank/NBFC's real policy text, or a public source like SBA SOP
-50 10 or an RBI MSME lending circular. What matters for this week is the
-pipeline (chunk -> embed -> retrieve -> cite), which works identically
-regardless of whose policy text goes in.
-
-Deliberately written to reference the EXACT thresholds Week 2's
-detect_red_flags already hardcodes (DSCR 1.0, D/E 2.5, current ratio 1.0,
-Z' zones). That's not a coincidence — it closes a loop: those thresholds
-stopped being "numbers I picked" and became "numbers the policy specifies,"
-which is a real, citable answer to "why 1.0 and not 0.9?" in an interview.
+The synthetic thresholds match the project's deterministic risk flags.
+This is not an institution's underwriting manual or independent validation
+of the thresholds. Real use requires appropriate policies and domain review.
 """
 
 POLICY_DOCS = [

@@ -1,27 +1,6 @@
-"""
-Week 5 -- MCP server.
+"""MCP 2.x tool registration, outputs and in-process error checks.
 
-Run with: pytest test_week5.py -v
-
-Two things this file actually proves, both found by running real code
-against the real installed mcp 2.1.1 package, not assumed from training
-data or a blog post:
-
-1. mcp 2.0.0 (shipped 2026-07-28, after this assistant's training cutoff)
-   renamed FastMCP -> MCPServer and moved mcp.server.fastmcp ->
-   mcp.server.mcpserver. mcp_server.py is written against the new API.
-
-2. The in-process MCPServer.call_tool() convenience method -- what these
-   tests use, since there's no real client/transport in a test -- does
-   NOT convert a ToolError (or a genuine crash, wrapped as
-   UnexpectedToolError) into a CallToolResult(is_error=True). Both
-   propagate as raised Python exceptions to whoever calls call_tool().
-   Confirmed by reading mcp/server/mcpserver/tools/base.py directly: the
-   is_error=True conversion happens at the real transport/protocol layer,
-   which these tests don't exercise. So: happy-path assertions check
-   `result.is_error`; anticipated-failure assertions wrap the call in
-   `pytest.raises(ToolError)` instead -- checking `result.is_error` for
-   those would be testing something that isn't true at this layer.
+These tests do not exercise a client transport connection.
 """
 
 import asyncio
@@ -41,8 +20,7 @@ from wealthpilot.tools import detect_red_flags as lc_detect_red_flags
 
 
 class FakeEmbeddings:
-    """Same bag-of-words fake as tests_week3/4 -- real embeddings still
-    need huggingface.co, unavailable in this sandbox."""
+    """Deterministic bag-of-words test embeddings for MCP tool checks."""
 
     def __init__(self, dim: int = 256):
         self.dim = dim

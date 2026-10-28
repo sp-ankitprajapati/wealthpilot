@@ -1,12 +1,7 @@
-"""
-Week 4/6 — Multi-agent orchestration, persistent case memory, and
-human-in-the-loop approval.
+"""Checkpointed case graph with explicit human approval.
 
-build_case_graph wires the five specialists from multi_agent.py behind a
-supervisor router, with an optional checkpointer so a case's state
-survives across separate invoke() calls -- across a completely fresh
-graph object (a process restart), and now also across a real pause for
-human review (Week 6's human_approval node).
+build_case_graph connects the specialist nodes through a supervisor router.
+A supplied checkpointer preserves state across calls and review interruptions.
 """
 
 from langgraph.graph import StateGraph, END

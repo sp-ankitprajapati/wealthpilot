@@ -1,12 +1,12 @@
 # WealthPilot
 
-A portfolio SME-underwriting workflow using deterministic ratio tools, policy RAG, LangGraph case checkpoints and explicit human approval. It exposes three tools through an MCP 2.x server. The original single-agent loop remains a separate learning example; the case graph is the interface with the approval gate.
+An SME-underwriting prototype using deterministic ratio tools, policy RAG, LangGraph case checkpoints and explicit human approval. It exposes three tools through an MCP 2.x server. The single-agent loop is a separate implementation; the case graph is the interface with the approval gate.
 
 ## Verified status
 
-**89 local tests pass**, including the original 65 cases and24 additional boundary cases. New checks cover verdict ambiguity, typed recommendations, malformed human decisions, changed statements, injected derived state, nonfinite financial values, JSON-safe zero denominators, negative book equity and policy-index isolation. CI runs the suite without provider credentials or model downloads.
+**89 local tests pass.** Checks cover verdict ambiguity, typed recommendations, malformed human decisions, changed statements, injected derived state, nonfinite financial values, JSON-safe zero denominators, negative book equity and policy-index isolation. CI runs the suite without provider credentials or model downloads.
 
-Tests use controlled models/embeddings to verify orchestration. They do not measure live LLM underwriting quality, real population fairness or deployment suitability. The reported historical7.6 s to 1.06 s import improvement remains build-log history. A new reproducible three-process measurement is saved in [startup benchmark](results/startup_benchmark.json), with median 2.14 s on the checked Windows environment. Fresh-process import timing is different from OS cold-cache or request latency.
+Tests use controlled models/embeddings to verify orchestration. They do not measure live LLM underwriting quality, real population fairness or deployment suitability. A reproducible three-process import measurement is saved in the [startup benchmark](results/startup_benchmark.json), with median 2.14 s on the checked Windows environment. Fresh-process import timing is different from OS cold-cache or request latency.
 
 ## Setup
 
@@ -73,12 +73,6 @@ MCP 2.x exposes calculate_ratios, detect_red_flags and retrieve_policy through b
 | fairness.py | Controlled region-variant checks |
 | eval_harness.py / tracing.py | Evaluation and structured node logs |
 | mcp_server.py | Three reusable tools |
-| offline_demo.py | Honest no-key workflow demonstration |
+| offline_demo.py | Workflow demonstration without provider credentials |
 
-Read [updated Hinglish learning guide](docs/LEARNING_HINGLISH.md), [verification evidence](results/verification.json) and [historical build log](docs/BUILD_LOG.md). Model judgment, policy retrieval relevance, proxy fairness and legal applicability still need independent live evaluation. No production-readiness claim is made.
-
-##Description
-
-- Built a LangGraph underwriting prototype with deterministic ratio tools, clause-grounded policy retrieval, persistent case checkpoints and strict human approval.
-- Added typed verdict validation, revision isolation, finite JSON contracts and89 automated tests, including controlled region-exclusion checks.
-- Exposed calculation and research tools through MCP 2.x and published reproducible startup measurements with clearly scoped evaluation evidence.
+See the [verification record](results/verification.json) and [startup benchmark](results/startup_benchmark.json). Model judgment, policy retrieval relevance, proxy fairness and legal applicability still need independent live evaluation. No production-readiness claim is made.

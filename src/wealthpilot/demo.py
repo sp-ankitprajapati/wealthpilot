@@ -1,19 +1,10 @@
-"""
-Week 7 — Demo script.
+"""Run one live-provider case with readable intermediate output.
 
-Run with: python3 demo.py
+Run with: python -m wealthpilot.demo
 
-Walks ONE case through the entire pipeline with readable output at each
-stage -- meant to be the thing you actually run on screen in an
-interview, not a test and not a full eval sweep (that's eval_harness.py).
-Shows the recommendation, the rationale, the interrupt payload a real
-reviewer would see, and the final decision after approving it.
-
-Needs a real API key (see the Toolkit's Setup chapter) and real internet
-access for the embeddings model -- this will not run inside the
-network-sandboxed environment this project was built in. That's not a
-bug to fix; every prior week's __main__ block has the same honest
-limitation, documented each time it came up.
+Requires configured provider credentials and embedding dependencies.
+The demo shows a recommendation, review interruption and explicit approval.
+Use wealthpilot.offline_demo for the controlled example without credentials.
 """
 
 import json
@@ -84,7 +75,7 @@ def run_demo(model, embeddings, case_index: int = 10) -> None:
     final = app.invoke(Command(resume={"approved": True}), config=config)
 
     print(f"FINAL STATUS: {final['final_status'].upper()}")
-    print(f"(expected, from Week 1's labeled eval set: {case['expected_verdict']})")
+    print(f"(expected synthetic label: {case['expected_verdict']})")
 
 
 if __name__ == "__main__":

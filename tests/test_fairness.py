@@ -1,13 +1,4 @@
-"""
-Week 6 — Bias / fairness evaluation.
-
-Run with: pytest tests/test_fairness.py -v
-
-Every test here is a falsifiable structural claim, not a statistical
-approximation of fairness. If applicant_region ever started influencing
-an outcome, every single test here would fail -- they're written to
-catch a REGRESSION as much as to prove a current guarantee.
-"""
+"""Regression checks for region variants in the synthetic review pathway."""
 
 import json
 

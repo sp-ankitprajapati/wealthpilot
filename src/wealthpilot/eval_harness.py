@@ -1,17 +1,8 @@
-"""
-Week 7 — Eval harness.
+"""Evaluate model recommendations on the labeled synthetic case set.
 
-Runs the FULL graph (document_parser -> risk_analyst -> credit_researcher
--> final_review -> human_approval) against every case in Week 1's labeled
-eval set, auto-approving each recommendation (Command(resume={"approved":
-True})) so the harness measures the AI's recommendation quality, not a
-human reviewer's judgment -- the auto-approval is the harness's choice,
-not a claim that real cases should skip human review.
-
-Deliberately separate from the tests: a test asserts a specific expected
-result and fails the build if it's wrong. This harness measures whatever
-the given model actually does and reports it -- accuracy 62% is a valid,
-useful harness result; it would be a failing test.
+The harness runs the case graph and automatically accepts recommendations
+for scoring. This controlled evaluation does not replace human approval
+in the application workflow or establish real-world underwriting quality.
 """
 
 import json

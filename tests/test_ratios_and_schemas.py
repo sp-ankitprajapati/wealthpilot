@@ -1,13 +1,4 @@
-"""
-Week 1 — Foundation.
-
-Run with: pytest test_week1.py -v
-
-These aren't exhaustive, but they cover the two failure modes that would
-otherwise silently corrupt every later week: (1) the ratio math itself
-being wrong, and (2) division-by-zero on the edge cases real SME data
-actually produces (a debt-free business has total_debt_service == 0).
-"""
+"""Financial arithmetic, schema boundaries and synthetic-label checks."""
 
 import random
 
@@ -111,17 +102,7 @@ class TestSchemaValidation:
 
 
 class TestSyntheticDataMatchesItsOwnStory:
-    """The point of labeled synthetic data is that the label is TRUE. If
-    'healthy' cases don't actually land in the safe zone, the eval set is
-    lying to every week that depends on it — so we check the story, not
-    just that the generator runs without crashing.
-
-    Every test here seeds the RNG explicitly before generating. Without
-    that, 'case 8 failed' is meaningless — it depends on whatever random
-    calls happened to run earlier in the test session, so a failure can't
-    be reproduced or debugged. Seeded, a failure points at an exact,
-    reproducible statement every time.
-    """
+    """Check reproducibly generated profiles against their intended ratio conditions."""
 
     @pytest.mark.parametrize("profile", ["healthy", "illiquid", "overleveraged", "declining"])
     def test_generator_produces_valid_statements(self, profile):

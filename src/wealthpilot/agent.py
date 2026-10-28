@@ -1,9 +1,7 @@
-"""
-Week 2 — Single agent, single loop.
+"""Single-agent tool-calling loop for financial ratios and risk flags.
 
-The goal this week is narrow on purpose: one agent, two tools, no RAG, no
-multi-agent orchestration, no persistence. Get "upload financials -> get a
-risk summary" working end to end before adding anything else.
+This implementation has no policy retrieval, persistent case workflow or
+human-approval gate. Use case_graph for the checkpointed review workflow.
 """
 
 import os

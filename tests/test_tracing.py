@@ -1,14 +1,4 @@
-"""
-Week 7 — Observability.
-
-Run with: pytest tests/test_tracing.py -v
-
-The last test in this file (interrupt-safety) locks in something
-confirmed manually first with a minimal reproduction (see
-docs/BUILD_LOG.md, Week 7): wrapping an interrupt()-based node in
-traced_node() does not break pause/resume. That finding is now a real,
-running test against the actual case_graph, not just a one-off repro.
-"""
+"""Structured trace records and interruption/resumption regression checks."""
 
 import json
 
@@ -68,10 +58,7 @@ class TestTracing:
         assert entry["output_tokens"] == 45
 
     def test_traced_node_does_not_break_a_real_interrupt_flow(self, retrieve_tool):
-        """Confirmed manually earlier (see docs/BUILD_LOG.md, Week 7)
-        that wrapping an interrupt()-based node is safe -- this locks
-        that finding in as a real, running test against the actual
-        case_graph, not just the minimal repro used to first check it."""
+        """Check trace logging across a real case-graph pause and resume."""
 
         model = RuleBasedFakeModel()
         app = build_case_graph(model, retrieve_tool, checkpointer=InMemorySaver())

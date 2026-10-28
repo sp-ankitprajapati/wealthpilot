@@ -1,21 +1,8 @@
-"""
-Week 5 -- MCP server exposing WealthPilot's underwriting tools.
+"""MCP 2.x server exposing the shared underwriting tools.
 
-Written against mcp SDK 2.x's MCPServer, NOT the 1.x FastMCP API most
-tutorials (and an earlier version of this project's own toolkit
-reference doc) were written against. mcp 2.0.0 shipped 2026-07-28 --
-after this assistant's training cutoff -- and renamed FastMCP to
-MCPServer, moving mcp.server.fastmcp -> mcp.server.mcpserver. Confirmed
-directly against the installed package (2.1.1) by trying the old import,
-reading the ModuleNotFoundError it raises on purpose to point at this,
-and checking call_tool()'s real signature -- not assumed from training
-data. See docs/BUILD_LOG.md for the full story.
-
-Design: build_server() is a factory, same DI shape as every prior week's
-build_graph() / make_retrieve_policy_tool() -- it takes an ALREADY-BUILT
-retrieve_policy tool (real index in production, fake-embedded index in
-tests) rather than building one itself, so the MCP wiring is testable
-without needing real embeddings.
+build_server accepts an existing retrieve_policy tool so tests and callers
+can supply their own index. In-process calls exercise tool registration
+and error handling; transport interoperability requires client verification.
 """
 
 import json
@@ -44,8 +31,8 @@ def build_server(retrieve_policy_tool) -> MCPServer:
         Returns DSCR, current_ratio, debt_to_equity, interest_coverage,
         revenue_growth_pct, altman_z, and altman_zone (safe/grey/distress).
         """
-        # Delegates to the SAME LangChain tool object Week 2's agent and
-        # Week 4's risk_analyst node call -- one implementation, three
+        # Delegates to the same shared tool used by the agent and
+        # risk_analyst node -- one implementation, three
         # different callers (LLM tool-calling, a plain Python node, and
         # now an MCP client), not three copies of the ratio logic.
         #

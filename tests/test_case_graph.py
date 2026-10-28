@@ -1,20 +1,4 @@
-"""
-Week 4 — Multi-agent orchestration + persistent case memory.
-
-Run with: pytest test_week4.py -v
-
-Updated for Week 6: a case no longer completes in one .invoke() call --
-human_approval's interrupt() pauses it first. Every test here now does
-invoke() -> confirm it paused with the expected recommendation -> resume
-with Command(resume=...) -> confirm the final outcome. That two-step
-shape isn't incidental to these tests; it's the real behavior Week 6
-added, and pretending otherwise would make these tests pass against code
-that doesn't match how the graph actually runs.
-
-Same fake-first philosophy as every prior week: FakeCaseModel and
-FakeEmbeddings prove the ORCHESTRATION and PERSISTENCE mechanics work,
-deterministically, with no API key and no network call.
-"""
+"""Case persistence and human-review pause/resume checks."""
 
 import hashlib
 import json
@@ -32,8 +16,7 @@ from wealthpilot.synthetic_data import generate_synthetic_case
 
 
 class FakeEmbeddings:
-    """Same bag-of-words fake as test_week3.py -- real embeddings still
-    need huggingface.co, unavailable in this sandbox."""
+    """Deterministic bag-of-words test embeddings for persistence checks."""
 
     def __init__(self, dim: int = 256):
         self.dim = dim

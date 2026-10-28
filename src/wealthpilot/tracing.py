@@ -1,19 +1,7 @@
-"""
-Week 7 — Observability.
+"""Structured case-node logging with latency and optional token usage.
 
-traced_node wraps any node function with structured logging: node name,
-case_id, latency, and token usage IF the node's result carries a message
-with usage_metadata (real LLM responses do; the deterministic nodes and
-test fakes don't, and that's handled as an absence, not an error).
-
-Confirmed safe around interrupt()-based nodes before relying on it: when
-a node pauses via interrupt(), LangGraph's internal signal propagates
-THROUGH this wrapper without the wrapper doing anything wrong -- the
-logger.info() call after node_fn(state) simply doesn't run yet, because
-node_fn(state) hasn't returned yet. It fires exactly once, on the resume
-call that actually completes the node. Verified directly with a minimal
-repro before wrapping the real human_approval node with it -- a decorator
-that silently broke pause/resume would be a bad trade for a log line.
+Interrupted nodes propagate the pause signal. Completed node calls emit
+their trace record after the wrapped function returns.
 """
 
 import json

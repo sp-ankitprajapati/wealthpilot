@@ -1,11 +1,7 @@
-"""
-Week 3 — Policy RAG.
+"""Policy chunking and retrieval with injectable embeddings.
 
-Same dependency-injection shape as Week 2's build_graph(model): the
-functions here take an embeddings object rather than importing one
-directly, so tests can pass a fake and real code can pass
-HuggingFaceEmbeddings / GoogleGenerativeAIEmbeddings without this file
-ever needing to know which.
+Callers supply embeddings and indexes. Tests use controlled lexical
+representations; live semantic retrieval requires separate evaluation.
 """
 
 import json
@@ -149,7 +145,7 @@ def make_retrieve_policy_tool(vectorstore: Chroma):
             }
             for r in results
         ]
-        # explicit json.dumps — see Week 2's tools.py for exactly why an
+        # Explicit JSON serialization, as in tools.py: an
         # empty result list specifically must not be returned raw
         return json.dumps(payload)
 

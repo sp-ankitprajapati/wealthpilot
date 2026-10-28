@@ -1,19 +1,7 @@
-"""
-Week 1 — Foundation.
+"""Synthetic financial statements and reproducible evaluation labels.
 
-Generates SME financial statements with a KNOWN risk profile, so we have
-ground-truth labels before any agent exists to grade. Four profiles, each
-stressing a different part of the ratio set on purpose — a real underwriter
-has to tell these apart, and so will the agent, eventually.
-
-    healthy        -> sound on every ratio                  -> approve
-    illiquid        -> sound fundamentals, short-term crunch  -> review
-    overleveraged  -> too much debt relative to earnings     -> decline
-    declining      -> shrinking, margins compressing         -> decline
-
-The ranges below were tuned by generating a batch and checking the actual
-computed ratios land where each profile's story says they should (see
-`if __name__ == "__main__"` at the bottom) — not chosen once and trusted.
+The healthy, illiquid, overleveraged and declining profiles exercise
+different ratio conditions. These cases are not real borrower records.
 """
 
 import random
@@ -116,10 +104,7 @@ def generate_synthetic_case(profile: RiskProfile, case_num: int) -> FinancialSta
 
 
 def generate_eval_set(cases_per_profile: int = 5, seed: int = 7) -> list[dict]:
-    """The held-out ground truth for Week 7's eval harness. Built once, with
-    a fixed seed, and then left alone — regenerating it with a new seed
-    every time you touch this file would mean your eval numbers aren't
-    comparable week over week."""
+    """Build the labeled evaluation cases with a fixed seed."""
     random.seed(seed)
     from .ratios import compute_ratios
 

@@ -1,19 +1,6 @@
-"""
-Week 3 — Policy RAG.
+"""Controlled policy chunking, retrieval and metadata checks.
 
-Run with: pytest tests/test_rag.py -v
-
-Same split as test_agent.py: PLUMBING is testable now, deterministically,
-with no network call. QUALITY of real semantic retrieval needs real
-embeddings, which need huggingface.co (for the local model) or a
-provider's hosted embeddings API — neither reachable from a network-
-sandboxed environment. Run rag.py's __main__ on your own machine, with
-real internet access, to see real retrieval quality.
-
-FakeEmbeddings below is a bag-of-words hash embedding — deterministic,
-dependency-free, good enough to prove chunking, indexing, retrieval, and
-metadata round-tripping all work, NOT a stand-in for real semantic
-similarity.
+Fake embeddings exercise orchestration rather than live semantic quality.
 """
 
 import hashlib
@@ -96,11 +83,7 @@ class TestRetrieval:
         assert results[0]["clause"] == "3.2"
 
     def test_tool_output_is_valid_json_string_not_a_raw_list(self, fake_index):
-        """Same lesson as Week 2's detect_red_flags: don't trust the
-        framework to serialize consistently — verify content really is a
-        JSON string, since a LangGraph ToolNode would otherwise be the
-        one calling this, and Week 2 already found a case where it
-        silently didn't serialize an empty list."""
+        """Verify that even an empty result is serialized as a JSON string."""
         tool_fn = make_retrieve_policy_tool(fake_index)
         raw_output = tool_fn.invoke({"query": "anything", "k": 2})
         assert isinstance(raw_output, str)

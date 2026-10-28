@@ -1,10 +1,4 @@
-"""
-Week 1 — Foundation.
-
-Deterministic underwriting math. No LLM anywhere in this file — that's
-deliberate. These numbers are the ground truth the agent gets graded
-against later, so they can't themselves depend on the thing being graded.
-"""
+"""Deterministic financial ratios and simplified risk calculations."""
 
 from .schemas import FinancialStatement
 

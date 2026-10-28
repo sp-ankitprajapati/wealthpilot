@@ -1,12 +1,6 @@
-"""
-Week 2 — Single agent, single loop.
+"""Tool wrappers around shared financial calculations and risk flags.
 
-Two tools, both thin wrappers around Week 1's already-tested logic. That's
-deliberate: the agent should never be doing arithmetic itself — it decides
-WHEN to call a deterministic calculator and HOW to interpret the result,
-the calculator does the actual math. Keeping that boundary sharp is what
-makes the system's numbers trustworthy regardless of which LLM sits behind
-the agent.
+The model selects tools; deterministic Python functions perform arithmetic.
 """
 
 import json
@@ -110,7 +104,7 @@ TOOLS = [calculate_ratios, detect_red_flags]
 
 
 if __name__ == "__main__":
-    # Prove the tools work standalone, against Week 1's own labeled eval
+    # Exercise the standalone tools against the labeled evaluation
     # set, with NO agent and NO LLM involved yet. If these don't produce
     # sensible flags per profile, wiring an LLM on top only hides the bug.
     from .paths import EVAL_CASES_PATH

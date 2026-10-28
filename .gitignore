@@ -8,7 +8,7 @@ venv/
 .env
 *.key
 
-# LangGraph checkpointer / Chroma persistence, once Week 4+ adds them
+# LangGraph checkpoints and Chroma persistence
 *.db
 .chroma/
 chroma_db/
@@ -27,3 +27,9 @@ build/
 dist/
 .env.*
 !.env.example
+
+# Personal study materials
+/docs/*HINGLISH*.md
+/docs/practice_basics.py
+/docs/BUILD_LOG.md
+/study-notes/
